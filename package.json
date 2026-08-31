@@ -1,0 +1,25 @@
+{
+  "name": "conduit",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write .",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:generate": "pnpm --filter @conduit/db exec prisma generate",
+    "db:push": "pnpm --filter @conduit/db exec prisma db push",
+    "db:studio": "pnpm --filter @conduit/db exec prisma studio"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "prettier": "^3.3.3",
+    "tsup": "^8.3.0",
+    "turbo": "^2.1.3",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.2"
+  }
+}

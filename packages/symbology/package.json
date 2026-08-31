@@ -1,0 +1,30 @@
+{
+  "name": "@conduit/symbology",
+  "version": "0.0.0",
+  "description": "FIGI-backed instrument resolution with local cache",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@conduit/core": "workspace:^",
+    "@conduit/db": "workspace:^",
+    "undici": "^8.10.1",
+    "zod": "^4.5.4"
+  }
+}

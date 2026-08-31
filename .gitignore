@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.turbo/
+coverage/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+.fixtures/
+*.log
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+packages/db/src/generated/

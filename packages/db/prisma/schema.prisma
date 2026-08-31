@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Canonical instrument, keyed by FIGI.
+model Instrument {
+  figi        String   @id
+  ticker      String
+  name        String?
+  assetClass  String
+  exchangeMic String?
+  currency    String   @default("USD")
+  active      Boolean  @default(true)
+  resolvedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  symbolMaps  SymbolMap[]
+
+  @@index([ticker])
+  @@index([assetClass, active])
+}
+
+/// Per-provider symbol variants for an instrument (BRK.B / BRK-B / BRK/B).
+model SymbolMap {
+  id         String     @id @default(cuid())
+  figi       String
+  provider   String
+  symbol     String
+  validFrom  DateTime   @default(now())
+  validTo    DateTime?
+
+  instrument Instrument @relation(fields: [figi], references: [figi], onDelete: Cascade)
+
+  @@unique([provider, symbol, validFrom])
+  @@index([figi, provider])
+}
+
+/// Rolling usage counters, written locally. Never leaves the user's machine.
+model UsageEvent {
+  id        String   @id @default(cuid())
+  provider  String
+  kind      String   // "rest" | "ws_message" | "ws_subscribe"
+  schema    String?
+  figi      String?
+  count     Int      @default(1)
+  costMicro Int      @default(0)
+  occurredAt DateTime @default(now())
+
+  @@index([provider, occurredAt])
+  @@index([occurredAt])
+}
+
+/// Known provider limits, seeded from config and refined by observation.
+model ProviderQuota {
+  provider     String   @id
+  windowSec    Int
+  maxRequests  Int?
+  maxMessages  Int?
+  monthlyCents Int?
+  updatedAt    DateTime @updatedAt
+}
