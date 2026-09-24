@@ -10,6 +10,7 @@ import {
   type ControlMessage,
 } from '@conduit/core';
 import { ConduitClient } from '../src/client.js';
+import { FailoverAudit } from '../src/audit.js';
 import type { RouterEvent } from '../src/config.js';
 import { FakeAdapter } from './fake-adapter.js';
 
@@ -432,5 +433,95 @@ describe('lifecycle', () => {
     for await (const _ of sub) break;
     await waitFor(() => polygon.openStreams === 0, 2_000);
     await client.close();
+  });
+});
+
+describe('phase 5 metric 2: failover audit', () => {
+  it('counts switches, degradations, and recoveries from one run', async () => {
+    const polygon = new FakeAdapter('polygon');
+    const alpaca = new FakeAdapter('alpaca');
+    const audit = new FailoverAudit({ thrashWindowMs: 10_000 });
+    const client = new ConduitClient({
+      providers: [polygon, alpaca],
+      failover: { ...FAST, healthWindowMs: 50 },
+      onEvent: audit.onEvent,
+    });
+    const sub = await client.subscribe({ symbols: ['AAPL'], schema: 'quote_l1' });
+    audit.watch(sub);
+    const sink = collect(sub);
+
+    polygon.failNow(new AuthError('key revoked', { provider: 'polygon' }));
+    await waitFor(() => sub.activeProvider === 'alpaca', 2_000);
+
+    const report = audit.report();
+    expect(report.switches).toBe(1);
+    expect(report.degradations).toBeGreaterThanOrEqual(1);
+    expect(report.byProvider).toEqual({ alpaca: 1 });
+    expect(report.incidents[0]).toMatchObject({
+      from: 'polygon',
+      to: 'alpaca',
+      schema: 'quote_l1',
+    });
+    expect(audit.format()).toContain('polygon -> alpaca');
+
+    await sub.close();
+    await client.close();
+    await sink.done;
+  });
+
+  it('flags a provider that flaps rather than calling two switches a success', async () => {
+    const audit = new FailoverAudit({ thrashWindowMs: 10_000, now: () => clock });
+    let clock = new Date('2026-09-24T00:00:00.000Z');
+
+    audit.record({ type: 'switch', provider: 'alpaca', previousProvider: 'polygon', reason: 'a', atMs: 0 });
+    clock = new Date(clock.getTime() + 1_000);
+    audit.record({ type: 'switch', provider: 'polygon', previousProvider: 'alpaca', reason: 'b', atMs: 0 });
+    clock = new Date(clock.getTime() + 60_000);
+    audit.record({ type: 'switch', provider: 'alpaca', previousProvider: 'polygon', reason: 'c', atMs: 0 });
+
+    const report = audit.report();
+    expect(report.switches).toBe(3);
+    // Only the second switch was inside the thrash window.
+    expect(report.rapidSwitches).toBe(1);
+    expect(report.incidents[1]!.sinceLastMs).toBe(1_000);
+    expect(report.incidents[2]!.sinceLastMs).toBe(60_000);
+  });
+
+  it('reports the messages the router suppressed on a switch', async () => {
+    const polygon = new FakeAdapter('polygon');
+    const alpaca = new FakeAdapter('alpaca');
+    const audit = new FailoverAudit();
+    const client = new ConduitClient({
+      providers: [polygon, alpaca],
+      failover: FAST,
+      onEvent: audit.onEvent,
+    });
+    const sub = await client.subscribe({ symbols: ['AAPL'], schema: 'quote_l1' });
+    audit.watch(sub);
+    const sink = collect(sub);
+
+    polygon.emitQuote('AAPL', T0 + 5_000_000_000n);
+    await waitFor(() => sink.messages.length === 1);
+    polygon.failNow(new AuthError('revoked', { provider: 'polygon' }));
+    await waitFor(() => sub.activeProvider === 'alpaca', 2_000);
+    alpaca.emitQuote('AAPL', T0 + 1_000_000_000n);
+    alpaca.emitQuote('AAPL', T0 + 2_000_000_000n);
+    await waitFor(() => audit.report().droppedOutOfOrder === 2);
+
+    // A clean failover: messages suppressed, nothing out of order handed to the consumer, no thrash.
+    expect(audit.report()).toMatchObject({ switches: 1, droppedOutOfOrder: 2, rapidSwitches: 0 });
+
+    await sub.close();
+    await client.close();
+    await sink.done;
+  });
+
+  it('caps retained incidents so a long run cannot grow without bound', () => {
+    const audit = new FailoverAudit({ maxIncidents: 2 });
+    for (let i = 0; i < 10; i += 1) {
+      audit.record({ type: 'switch', provider: 'alpaca', reason: `r${i}`, atMs: 0 });
+    }
+    expect(audit.report().incidents).toHaveLength(2);
+    expect(audit.report().byProvider).toEqual({ alpaca: 10 });
   });
 });

@@ -1,3 +1,9 @@
+export {
+  FailoverAudit,
+  type FailoverAuditOptions,
+  type FailoverAuditReport,
+  type FailoverIncident,
+} from './audit.js';
 export { ConduitClient, createClient } from './client.js';
 export {
   DEFAULT_FAILOVER,
