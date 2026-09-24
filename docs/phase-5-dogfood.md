@@ -1,17 +1,17 @@
 # Phase 5 — dogfood in production
 
 Status: **not started.** Phases 0–4 are built and tested; this phase is four weeks of live use in
-Crossbar and then Prophet, which needs provider keys and calendar time. What is built here is the
+the internal consumers, which needs provider keys and calendar time. What is built here is the
 apparatus for measuring it, so the gate is decided by numbers rather than by recollection.
 
-This is the go/no-go gate for product-ization. If migrating Crossbar takes longer than the original
+This is the go/no-go gate for product-ization. If the first migration takes longer than the original
 integration did, Conduit stays an internal package permanently and the roadmap ends here.
 
 ## Order
 
-1. **Crossbar first.** It is the heaviest market data consumer, so it exercises the most surface.
-2. **Prophet second**, only after Crossbar has run for two weeks without a correctness incident.
-3. Touchstone is out of scope for this phase.
+1. **Heaviest consumer first.** It exercises the most surface, so it finds the most problems.
+2. **Second consumer** only after the first has run for two weeks without a correctness incident.
+3. Everything else is out of scope for this phase.
 
 ## Metric 1 — escape hatches leaking into calling code
 
@@ -22,7 +22,7 @@ that nothing else needed a provider-specific path. Any other use of `raw`, or an
 `message.provider`, is somewhere the unified-schema premise did not hold.
 
 ```bash
-node scripts/count-escape-hatches.mjs ../crossbar/src
+node scripts/count-escape-hatches.mjs <consumer-repo>/src
 ```
 
 Exits non-zero when it finds an unsanctioned hatch. Record the count weekly:
@@ -86,7 +86,7 @@ itself:
 | | | | |
 
 The comparison that decides the gate is **migration hours versus the original integration hours**.
-If Crossbar's original Polygon integration took 20 hours and migrating it to Conduit takes 25, the
+If the original Polygon integration took 20 hours and migrating it to Conduit takes 25, the
 package has not paid for itself and the honest call is to stop.
 
 ## Decision rule

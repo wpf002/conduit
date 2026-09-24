@@ -1,7 +1,8 @@
 # Migrating from a raw provider client
 
 What replacing a hand-rolled Polygon or Alpaca integration actually involves. Written for the
-Phase 5 migration of Crossbar, and the honest answer to "how long will this take".
+Phase 5 migration of the first internal consumer, and the honest answer to "how long will this
+take".
 
 ## What Conduit replaces
 

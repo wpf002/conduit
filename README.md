@@ -123,7 +123,7 @@ Ledger data is written to the user's local Postgres and never transmitted.
 | 2 — Alpaca, Databento, failover router | done; Databento is replay-only |
 | 3 — symbology | done |
 | 4 — ledger + CLI | done |
-| 5 — dogfood in Crossbar and Prophet | not started; measurement apparatus built |
+| 5 — dogfood in the internal consumers | not started; measurement apparatus built |
 | 6 — optional public release | gated on Phase 5 |
 
 Phase 5 is the go/no-go gate for product-ization, and three of its four outcomes end with Conduit

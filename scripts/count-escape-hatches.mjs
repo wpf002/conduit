@@ -6,8 +6,8 @@
  * things the CDM does not normalize. Any other use of `.raw` in consumer code is a place the
  * unified schema did not hold, and that is what this counts.
  *
- *   node scripts/count-escape-hatches.mjs ../crossbar/src
- *   node scripts/count-escape-hatches.mjs ../crossbar/src --json
+ *   node scripts/count-escape-hatches.mjs ../<consumer-repo>/src
+ *   node scripts/count-escape-hatches.mjs ../<consumer-repo>/src --json
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, extname } from 'node:path';

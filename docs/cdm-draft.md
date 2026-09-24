@@ -79,5 +79,5 @@ the whole project. Phase 1 proceeds.
 ## Phase 5 tracking hook
 
 Escape-hatch leakage into calling code is metric #1 of the Phase 5 go/no-go gate. The baseline is
-this table: **two fields**. If Crossbar's migration needs `raw` for anything other than condition
+this table: **two fields**. If the first migration needs `raw` for anything other than condition
 codes or venue identity, that's a regression and it gets recorded here.
