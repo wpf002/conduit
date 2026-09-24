@@ -39,12 +39,12 @@ cat > package.json << 'JSON'
     "db:studio": "pnpm --filter @conduit/db exec prisma studio"
   },
   "devDependencies": {
-    "@types/node": "^22.7.5",
-    "prettier": "^3.3.3",
-    "tsup": "^8.3.0",
-    "turbo": "^2.1.3",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.2"
+    "@types/node": "^22.20.4",
+    "prettier": "^3.9.9",
+    "tsup": "^8.5.1",
+    "turbo": "^2.11.3",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
   }
 }
 JSON

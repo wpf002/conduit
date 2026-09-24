@@ -130,6 +130,17 @@ Phase 5 is the go/no-go gate for product-ization, and three of its four outcomes
 staying an internal package. See [docs/phase-5-dogfood.md](docs/phase-5-dogfood.md) and
 [docs/migration.md](docs/migration.md).
 
+## Toolchain
+
+Two dependencies are deliberately held back from `latest`, and `pnpm up --latest` will try to move
+both:
+
+| Package | Pinned | Why |
+|---|---|---|
+| `typescript` | `^5.9.3` | `tsup` bundles `rollup-plugin-dts@6.1.1`, built against the TS 5.7 API. TS 7 removed `useCaseSensitiveFileNames`, so `--dts` builds crash. |
+| `prisma`, `@prisma/client` | `7.10.0` | npm's `latest` tag is an 8.0 release candidate whose rewritten CLI has no `generate` command. |
+| `@types/node` | `^22` | Matches `engines: node >=22` and the CI runner. Types ahead of the minimum runtime let code compile that does not run. |
+
 ## Development
 
 ```bash

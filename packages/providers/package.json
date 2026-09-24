@@ -23,9 +23,9 @@
   },
   "dependencies": {
     "@conduit/core": "workspace:^",
-    "undici": "^8.10.1",
+    "undici": "^8.11.2",
     "ws": "^8.21.3",
-    "zod": "^4.5.4"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1"
