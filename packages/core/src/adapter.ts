@@ -26,6 +26,12 @@ export interface StreamRequest {
   readonly symbols: readonly string[];
   readonly schema: Schema;
   readonly assetClass?: AssetClass;
+  /**
+   * Replay window, nanoseconds. Omitted means live. Providers whose only interface is historical
+   * (Databento's HTTP API) require it; live-only providers throw CoverageError when it is given.
+   */
+  readonly start?: bigint;
+  readonly end?: bigint;
   /** Aborting ends the iterator cleanly; it does not reject. */
   readonly signal?: AbortSignal;
 }

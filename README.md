@@ -40,19 +40,27 @@ const sub = await conduit.subscribe({
   schema: 'quote_l1',
 });
 
-for await (const quote of sub) {
-  console.log(quote.figi, quote.bidPx, quote.askPx, quote.tsEvent);
+for await (const message of sub) {
+  // Failovers are announced on the same stream, ahead of the data they explain.
+  if (message.kind === 'control') {
+    console.warn(message.control, message.previousProvider, '->', message.provider, message.reason);
+    continue;
+  }
+  console.log(message.symbol, message.bidPx, message.askPx, message.tsEvent);
 }
 ```
 
 ## Supported providers
 
-| Provider   | Quotes | Trades | Bars | Depth | Status |
-|------------|--------|--------|------|-------|--------|
-| Polygon    | ✅     | ✅     | 1m   | —     | Phase 1 |
-| Alpaca     | ✅     | ✅     | ✅   | —     | Phase 2 |
-| Databento  | ✅     | ✅     | ✅   | ✅    | Phase 2 |
-| Tiingo     | —      | —      | ✅   | —     | Phase 3 |
+| Provider   | Quotes | Trades | Bars    | Depth | Live | Replay | Status |
+|------------|--------|--------|---------|-------|------|--------|--------|
+| Polygon    | ✅     | ✅     | 1m      | —     | ✅   | —      | Phase 1 |
+| Alpaca     | ✅     | ✅     | 1m, 1d  | —     | ✅   | —      | Phase 2 |
+| Databento  | ✅     | ✅     | 1m, 1d  | ✅    | —    | ✅     | Phase 2 |
+| Tiingo     | —      | —      | 1d      | —     | —    | ✅     | Phase 3 |
+
+Databento is replay-only: its live feed is binary DBN over a raw TCP gateway, which is a different
+transport from everything else here. See [docs/databento-live.md](docs/databento-live.md).
 
 ## Packages
 
@@ -74,6 +82,22 @@ pnpm db:push            # local Postgres for symbology cache
 pnpm build
 pnpm test
 ```
+
+## Failover
+
+The router does three things, in this order:
+
+1. **Coverage.** Which of your configured keys can serve this symbol, schema, and asset class at
+   all. A gap is reported as a `CoverageError` naming what you have configured.
+2. **Health.** Consecutive failures, message staleness, and rate-limit responses mark a provider
+   degraded; the subscription moves to the next covering provider and fails back when the first one
+   recovers.
+3. **Order.** On a switch, sequence continuity beats completeness. A provider that replays history
+   as it comes up has that history dropped, per symbol, against the last timestamp the consumer
+   already saw. `subscription.droppedOutOfOrder` counts it.
+
+It is explicitly not cost minimization. Cost routing only paid off under subscription pooling, and
+pooling is the part the licences prohibit.
 
 ## Streamable schemas
 
