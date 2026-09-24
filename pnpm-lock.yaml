@@ -32,9 +32,21 @@ importers:
       '@conduit/client':
         specifier: workspace:^
         version: link:../../packages/client
+      '@conduit/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@conduit/db':
+        specifier: workspace:^
+        version: link:../../packages/db
       '@conduit/ledger':
         specifier: workspace:^
         version: link:../../packages/ledger
+      '@conduit/providers':
+        specifier: workspace:^
+        version: link:../../packages/providers
+      '@conduit/symbology':
+        specifier: workspace:^
+        version: link:../../packages/symbology
       commander:
         specifier: ^15.0.0
         version: 15.0.0

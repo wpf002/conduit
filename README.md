@@ -73,6 +73,47 @@ transport from everything else here. See [docs/databento-live.md](docs/databento
 | `@conduit/client` | Failover router and subscription manager |
 | `@conduit/cli` | `conduit doctor`, `conduit spend`, `conduit resolve` |
 
+## CLI
+
+```bash
+conduit doctor                              # validate every key, report coverage and headroom
+conduit spend --since 7d --by provider      # usage and cost from the local ledger
+conduit resolve BRK.B --as-of 2019-01-01    # symbol to FIGI, as of a date
+conduit stream AAPL,MSFT --schema quote_l1  # smoke test one schema
+```
+
+`doctor` is the one you'll run most. It distinguishes the three failures that look alike from the
+outside:
+
+| Report | Means |
+|---|---|
+| `auth failed` | the key is dead; the provider is dropped from coverage |
+| `no entitlement` | the key works for equities and was refused for options or futures |
+| `near ceiling` | the key works and is close to its window limit |
+
+Every command takes `--json`.
+
+## Usage accounting
+
+`@conduit/ledger` counts REST calls, websocket subscriptions, and messages per provider per window,
+and refuses locally before a provider answers 429 — a refusal costs one call, a 429 mid-session
+costs a reconnect and a gap.
+
+```ts
+const ledger = new UsageLedger({ store: new PrismaLedgerStore(db) });
+polygon({ apiKey, usage: ledger.hooksFor('polygon') });
+```
+
+Cost is integer micro-units and the default per-unit price is **zero** for every provider. A
+flat-rate plan genuinely costs nothing per message, and a made-up number would show up in a spend
+report as if it were real. Supply your own model to attribute spend:
+
+```ts
+new UsageLedger({ costModel: { perUnit: { polygon: { rest: 2_000 } } } });
+```
+
+Ledger data is written to the user's local Postgres and never transmitted.
+
 ## Development
 
 ```bash

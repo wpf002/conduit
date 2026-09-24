@@ -6,6 +6,7 @@ import {
   RateLimitError,
   TransportError,
   isoToNs,
+  nowNs,
   redact,
   registerSecret,
   type AssetClass,
@@ -18,6 +19,7 @@ import {
   type Schema,
   type SnapshotRequest,
   type StreamRequest,
+  type UsageHooks,
 } from '@conduit/core';
 import { ConsumerSet } from '../fanout.js';
 import { ReconnectingSocket } from '../ws.js';
@@ -91,6 +93,9 @@ export interface AlpacaOptions {
   readonly resolveFigi?: (symbol: string) => string;
   readonly quoteSizeUnits?: 'lots' | 'shares';
   readonly includeRaw?: boolean;
+  /** Quota accounting. Hand it `ledger.hooksFor('alpaca')`. */
+  readonly usage?: UsageHooks;
+  /** Test seam. Production code never passes this. */
   readonly socketFactory?: ConstructorParameters<typeof ReconnectingSocket>[1];
 }
 
@@ -149,6 +154,9 @@ class AlpacaAdapter implements ProviderAdapter {
     const assetClass = req.assetClass ?? 'equity';
     this.#assertSupported('quote_l1', assetClass);
     if (req.symbols.length === 0) return [];
+
+    // Reserve before the call, so a local refusal replaces a 429.
+    await this.#options.usage?.acquire?.('rest', 1);
 
     const base = this.#options.restBaseUrl ?? 'https://data.alpaca.markets';
     const url = new URL('/v2/stocks/quotes/latest', base);
@@ -211,6 +219,7 @@ class AlpacaAdapter implements ProviderAdapter {
       if (normalized && normalized.kind === 'quote') out.push(normalized);
     }
     this.#health.recordMessage(out.length);
+    this.#reportUsage('rest', 1, 'quote_l1');
     return out;
   }
 
@@ -271,6 +280,22 @@ class AlpacaAdapter implements ProviderAdapter {
     await this.#teardownSocket();
   }
 
+  #reportUsage(kind: 'rest' | 'ws_message' | 'ws_subscribe', count: number, schema?: Schema): void {
+    const sink = this.#options.usage?.sink;
+    if (!sink || count === 0) return;
+    try {
+      sink({
+        provider: PROVIDER,
+        kind,
+        count,
+        atNs: nowNs(),
+        ...(schema ? { schema } : {}),
+      });
+    } catch {
+      /* accounting never breaks the data path */
+    }
+  }
+
   #normalizeOptions() {
     return {
       ...(this.#options.resolveFigi ? { resolveFigi: this.#options.resolveFigi } : {}),
@@ -328,6 +353,7 @@ class AlpacaAdapter implements ProviderAdapter {
     if (symbols.length === 0 || !this.#socket) return;
     const key = SUBSCRIBE_KEY[schema];
     if (!key) return;
+    if (action === 'subscribe') this.#reportUsage('ws_subscribe', symbols.length, schema);
     this.#socket.send(JSON.stringify({ action, [key]: [...symbols] }));
   }
 
@@ -380,6 +406,7 @@ class AlpacaAdapter implements ProviderAdapter {
 
     if (emitted.length === 0) return;
     this.#health.recordMessage(emitted.length);
+    this.#reportUsage('ws_message', emitted.length);
     this.#consumers.dispatch(emitted);
   }
 }

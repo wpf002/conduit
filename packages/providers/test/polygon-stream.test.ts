@@ -1,7 +1,13 @@
 import type { AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
 import { WebSocketServer, type WebSocket as ServerSocket } from 'ws';
-import { AuthError, isQuote, type CdmMessage, type ProviderAdapter } from '@conduit/core';
+import {
+  AuthError,
+  RateLimitError,
+  isQuote,
+  type CdmMessage,
+  type ProviderAdapter,
+} from '@conduit/core';
 import { polygon } from '../src/polygon/index.js';
 
 /**
@@ -311,5 +317,40 @@ describe('polygon coverage', () => {
 
   it('refuses to construct without a key', () => {
     expect(() => polygon({ apiKey: '' })).toThrow(AuthError);
+  });
+});
+
+describe('usage accounting', () => {
+  it('reports subscribes and messages through the usage sink', async () => {
+    fake = await startFakePolygon();
+    const records: { kind: string; count: number; schema?: string }[] = [];
+    adapter = connect({
+      usage: { sink: (r: { kind: string; count: number; schema?: string }) => records.push(r) },
+    });
+    const iterator = adapter.stream({ symbols: ['AAPL', 'MSFT'], schema: 'quote_l1' })[
+      Symbol.asyncIterator
+    ]();
+    await waitFor(() => fake!.subscribeFrames.length > 0);
+    expect(records).toEqual([
+      expect.objectContaining({ kind: 'ws_subscribe', count: 2, schema: 'quote_l1' }),
+    ]);
+
+    fake.send([quotePayload('AAPL', 0), quotePayload('MSFT', 1)]);
+    await iterator.next();
+    await waitFor(() => records.some((r) => r.kind === 'ws_message'));
+    expect(records.find((r) => r.kind === 'ws_message')).toMatchObject({ count: 2 });
+    await iterator.return?.();
+  });
+
+  it('asks permission before a REST call and lets a refusal through', async () => {
+    fake = await startFakePolygon();
+    adapter = connect({
+      usage: {
+        acquire: async () => {
+          throw new RateLimitError('local budget exhausted', { provider: 'polygon' });
+        },
+      },
+    });
+    await expect(adapter.snapshot({ symbols: ['AAPL'] })).rejects.toThrow(RateLimitError);
   });
 });

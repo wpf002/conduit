@@ -19,6 +19,7 @@ import {
   type Schema,
   type SnapshotRequest,
   type StreamRequest,
+  type UsageHooks,
 } from '@conduit/core';
 import { ConsumerSet } from '../fanout.js';
 import { parseJsonLossless } from '../json.js';
@@ -54,6 +55,8 @@ export interface PolygonOptions {
   readonly resolveFigi?: (symbol: string) => string;
   readonly quoteSizeUnits?: 'lots' | 'shares';
   readonly includeRaw?: boolean;
+  /** Quota accounting. Hand it `ledger.hooksFor('polygon')`. */
+  readonly usage?: UsageHooks;
   /** Test seam. Production code never passes this. */
   readonly socketFactory?: ConstructorParameters<typeof ReconnectingSocket>[1];
 }
@@ -114,6 +117,9 @@ class PolygonAdapter implements ProviderAdapter {
     this.#assertSupported('quote_l1', assetClass);
     if (req.symbols.length === 0) return [];
 
+    // Reserve before the call, so a local refusal replaces a 429.
+    await this.#options.usage?.acquire?.('rest', 1);
+
     const base = this.#options.restBaseUrl ?? 'https://api.polygon.io';
     const url = new URL('/v2/snapshot/locale/us/markets/stocks/tickers', base);
     url.searchParams.set('tickers', req.symbols.join(','));
@@ -164,6 +170,7 @@ class PolygonAdapter implements ProviderAdapter {
       if (quote) out.push(quote);
     }
     this.#health.recordMessage(out.length);
+    this.#reportUsage('rest', 1, 'quote_l1');
     return out;
   }
 
@@ -221,6 +228,22 @@ class PolygonAdapter implements ProviderAdapter {
   }
 
   // ---------------------------------------------------------------- internals
+  #reportUsage(kind: 'rest' | 'ws_message' | 'ws_subscribe', count: number, schema?: Schema): void {
+    const sink = this.#options.usage?.sink;
+    if (!sink || count === 0) return;
+    try {
+      sink({
+        provider: PROVIDER,
+        kind,
+        count,
+        atNs: nowNs(),
+        ...(schema ? { schema } : {}),
+      });
+    } catch {
+      /* accounting never breaks the data path */
+    }
+  }
+
   #normalizeOptions() {
     return {
       ...(this.#options.resolveFigi ? { resolveFigi: this.#options.resolveFigi } : {}),
@@ -271,6 +294,7 @@ class PolygonAdapter implements ProviderAdapter {
 
   #sendSubscribe(schema: Schema, symbols: readonly string[]): void {
     if (symbols.length === 0) return;
+    this.#reportUsage('ws_subscribe', symbols.length, schema);
     this.#socket?.send(
       JSON.stringify({ action: 'subscribe', params: this.#channelsFor(schema, symbols) }),
     );
@@ -319,6 +343,7 @@ class PolygonAdapter implements ProviderAdapter {
 
     if (emitted.length === 0) return;
     this.#health.recordMessage(emitted.length);
+    this.#reportUsage('ws_message', emitted.length);
     this.#consumers.dispatch(emitted);
   }
 

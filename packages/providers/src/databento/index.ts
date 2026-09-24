@@ -6,6 +6,7 @@ import {
   RateLimitError,
   SchemaError,
   TransportError,
+  nowNs,
   nsToIso,
   redact,
   registerSecret,
@@ -17,6 +18,7 @@ import {
   type Schema,
   type SnapshotRequest,
   type StreamRequest,
+  type UsageHooks,
 } from '@conduit/core';
 import { AsyncQueue } from '../queue.js';
 import { parseJsonLossless } from '../json.js';
@@ -53,6 +55,8 @@ export interface DatabentoOptions {
   readonly highWaterMark?: number;
   readonly resolveFigi?: (symbol: string) => string;
   readonly includeRaw?: boolean;
+  /** Quota accounting. Hand it `ledger.hooksFor('databento')`. */
+  readonly usage?: UsageHooks;
   /** Databento's symbology type for the symbols being passed. */
   readonly stypeIn?: 'raw_symbol' | 'continuous' | 'parent' | 'instrument_id';
 }
@@ -202,6 +206,16 @@ class DatabentoAdapter implements ProviderAdapter {
     });
 
     try {
+      await this.#options.usage?.acquire?.('rest', 1);
+      // One event per request, not per record: Databento's limits are on requests, and counting
+      // every record as billable would put a fabricated number in a spend report.
+      this.#options.usage?.sink?.({
+        provider: PROVIDER,
+        kind: 'rest',
+        count: 1,
+        schema: req.schema,
+        atNs: nowNs(),
+      });
       const res = await request(url, {
         method: 'POST',
         // HTTP basic with the key as the username and an empty password, per Databento's docs.
