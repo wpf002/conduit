@@ -49,7 +49,7 @@ for await (const quote of sub) {
 
 | Provider   | Quotes | Trades | Bars | Depth | Status |
 |------------|--------|--------|------|-------|--------|
-| Polygon    | ✅     | ✅     | ✅   | ⏳    | Phase 1 |
+| Polygon    | ✅     | ✅     | 1m   | —     | Phase 1 |
 | Alpaca     | ✅     | ✅     | ✅   | —     | Phase 2 |
 | Databento  | ✅     | ✅     | ✅   | ✅    | Phase 2 |
 | Tiingo     | —      | —      | ✅   | —     | Phase 3 |
@@ -74,6 +74,13 @@ pnpm db:push            # local Postgres for symbology cache
 pnpm build
 pnpm test
 ```
+
+## Streamable schemas
+
+`capabilities` on an adapter lists what it can serve on `stream()`, not what the vendor sells.
+Polygon has no daily-aggregate websocket channel and no L2 entitlement on the plans Conduit has
+been tested against, so `bars_1d` and `depth_10` throw `CoverageError` there rather than returning
+an empty iterator.
 
 ## Environment
 
