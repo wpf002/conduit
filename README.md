@@ -99,6 +99,34 @@ The router does three things, in this order:
 It is explicitly not cost minimization. Cost routing only paid off under subscription pooling, and
 pooling is the part the licences prohibit.
 
+## Symbology
+
+FIGI is the internal primary key. Every provider symbol is an alias with a validity window, which
+is what makes a historical query answerable:
+
+```ts
+const resolver = new SymbologyResolver({
+  store: new PrismaSymbologyStore(db),
+  openFigi: new OpenFigiClient({ apiKey: process.env.OPENFIGI_API_KEY }),
+});
+
+// Adapters take a synchronous hook that only reads the in-process cache.
+await resolver.prime(['AAPL', 'BRK.B']);
+polygon({ apiKey, resolveFigi: resolver.hookFor('polygon') });
+
+// A ticker means different things at different times.
+await resolver.resolve('CBRE', { asOf: new Date('1999-03-01') }); // the first company
+await resolver.resolve('CBRE', { asOf: new Date('2024-06-03') }); // the current one
+```
+
+Ticker reuse after a delisting is the specific failure that silently corrupts a backtest, so a
+query with a past `asOf` is answered from the local security master only. OpenFIGI answers as of
+today, and using today's answer for a 2019 question is how the wrong instrument gets into a
+result set.
+
+Postgres is optional. `MemorySymbologyStore` implements the same interface for a process that does
+not want a database.
+
 ## Streamable schemas
 
 `capabilities` on an adapter lists what it can serve on `stream()`, not what the vendor sells.

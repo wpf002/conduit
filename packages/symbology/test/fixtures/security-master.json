@@ -1,0 +1,4222 @@
+{
+  "generatedBy": "scripts/gen-security-master.mjs",
+  "note": "Synthetic, deterministic FIGIs. Tests resolution logic, not OpenFIGI data accuracy.",
+  "instrumentCount": 162,
+  "queryCount": 200,
+  "instruments": [
+    {
+      "figi": "BBG4H42M0TH5",
+      "ticker": "AAPL",
+      "name": "AAPL Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "AAPL",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGJ8F0ZZH68",
+      "ticker": "MSFT",
+      "name": "MSFT Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "MSFT",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG84YW1RD69",
+      "ticker": "NVDA",
+      "name": "NVDA Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "NVDA",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG664BZL962",
+      "ticker": "AMZN",
+      "name": "AMZN Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "AMZN",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGFTGFMLZ84",
+      "ticker": "GOOGL",
+      "name": "GOOGL Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "GOOGL",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGYJG4MW9L0",
+      "ticker": "GOOG",
+      "name": "GOOG Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "GOOG",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGF0NK6TC48",
+      "ticker": "TSLA",
+      "name": "TSLA Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "TSLA",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGK8V3SZCK6",
+      "ticker": "JPM",
+      "name": "JPM Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "JPM",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG4NM9CBQK4",
+      "ticker": "XOM",
+      "name": "XOM Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "XOM",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGRZSQ0F0H3",
+      "ticker": "UNH",
+      "name": "UNH Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "UNH",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGG18BK3R21",
+      "ticker": "JNJ",
+      "name": "JNJ Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "JNJ",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGZPVQPFNY7",
+      "ticker": "V",
+      "name": "V Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "V",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGR6C35RQ55",
+      "ticker": "PG",
+      "name": "PG Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "PG",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGTQCQ8RW66",
+      "ticker": "MA",
+      "name": "MA Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "MA",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGGQ1B812Z3",
+      "ticker": "HD",
+      "name": "HD Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "HD",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGMLCJ47RQ2",
+      "ticker": "CVX",
+      "name": "CVX Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "CVX",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGFQX7LM636",
+      "ticker": "MRK",
+      "name": "MRK Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "MRK",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGDTRNHN496",
+      "ticker": "ABBV",
+      "name": "ABBV Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ABBV",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG3SKF82V97",
+      "ticker": "PEP",
+      "name": "PEP Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "PEP",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGS2Z0RH937",
+      "ticker": "KO",
+      "name": "KO Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "KO",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGLK5CN4R51",
+      "ticker": "COST",
+      "name": "COST Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "COST",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG2D40DC565",
+      "ticker": "WMT",
+      "name": "WMT Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "WMT",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGSZ29R8TC4",
+      "ticker": "MCD",
+      "name": "MCD Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "MCD",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG0ZSKZW717",
+      "ticker": "CSCO",
+      "name": "CSCO Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "CSCO",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGYVMM40583",
+      "ticker": "CRM",
+      "name": "CRM Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "CRM",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGTF64VSQC3",
+      "ticker": "ACN",
+      "name": "ACN Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ACN",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGZL9P41MB8",
+      "ticker": "ADBE",
+      "name": "ADBE Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ADBE",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGNGTJ2L512",
+      "ticker": "AMD",
+      "name": "AMD Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "AMD",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG3PCCD8Q92",
+      "ticker": "INTC",
+      "name": "INTC Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "INTC",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGP94PWR7L0",
+      "ticker": "QCOM",
+      "name": "QCOM Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "QCOM",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG58GDZM5B5",
+      "ticker": "TXN",
+      "name": "TXN Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "TXN",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG740JVW9T4",
+      "ticker": "NFLX",
+      "name": "NFLX Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "NFLX",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG28YP6KXD0",
+      "ticker": "CMCSA",
+      "name": "CMCSA Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "CMCSA",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG9R34V0TZ0",
+      "ticker": "PFE",
+      "name": "PFE Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "PFE",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGCHR5Y9TG4",
+      "ticker": "T",
+      "name": "T Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "T",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG69PN1H0X1",
+      "ticker": "VZ",
+      "name": "VZ Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "VZ",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG2LG9BZVS0",
+      "ticker": "BAC",
+      "name": "BAC Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "BAC",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGS7LBSQNM2",
+      "ticker": "WFC",
+      "name": "WFC Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "WFC",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGCYGB23GD2",
+      "ticker": "GS",
+      "name": "GS Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "GS",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG84XCJ35P5",
+      "ticker": "MS",
+      "name": "MS Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "MS",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGBCB5M0123",
+      "ticker": "F",
+      "name": "F Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "F",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGL21FJYDT8",
+      "ticker": "GM",
+      "name": "GM Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "GM",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGNMDQF5630",
+      "ticker": "GE",
+      "name": "GE Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "GE",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG1SG6Q1SP8",
+      "ticker": "BA",
+      "name": "BA Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "BA",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGC98XKYRR0",
+      "ticker": "CAT",
+      "name": "CAT Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "CAT",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGKFTD3MH62",
+      "ticker": "DE",
+      "name": "DE Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "DE",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGYXQK4S394",
+      "ticker": "MMM",
+      "name": "MMM Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "MMM",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGFK32NM1M3",
+      "ticker": "HON",
+      "name": "HON Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "HON",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGXDT2300C6",
+      "ticker": "LMT",
+      "name": "LMT Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "LMT",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG0J7KSCYY3",
+      "ticker": "RTX",
+      "name": "RTX Inc",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "RTX",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG8HK1KH155",
+      "ticker": "SPY",
+      "name": "SPY Inc",
+      "assetClass": "etf",
+      "exchangeMic": "ARCX",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "SPY",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGNJF40DWY9",
+      "ticker": "QQQ",
+      "name": "QQQ Inc",
+      "assetClass": "etf",
+      "exchangeMic": "ARCX",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "QQQ",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG17VR3YZ37",
+      "ticker": "IWM",
+      "name": "IWM Inc",
+      "assetClass": "etf",
+      "exchangeMic": "ARCX",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "IWM",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGMR5Z5NRX7",
+      "ticker": "VTI",
+      "name": "VTI Inc",
+      "assetClass": "etf",
+      "exchangeMic": "ARCX",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "VTI",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG0TPFY7H91",
+      "ticker": "VOO",
+      "name": "VOO Inc",
+      "assetClass": "etf",
+      "exchangeMic": "ARCX",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "VOO",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGK0F504TP1",
+      "ticker": "EEM",
+      "name": "EEM Inc",
+      "assetClass": "etf",
+      "exchangeMic": "ARCX",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "EEM",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGF77J6CYS8",
+      "ticker": "TLT",
+      "name": "TLT Inc",
+      "assetClass": "etf",
+      "exchangeMic": "ARCX",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "TLT",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGQ6J9NZ2F2",
+      "ticker": "GLD",
+      "name": "GLD Inc",
+      "assetClass": "etf",
+      "exchangeMic": "ARCX",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "GLD",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGBKNWDG3Q8",
+      "ticker": "XLF",
+      "name": "XLF Inc",
+      "assetClass": "etf",
+      "exchangeMic": "ARCX",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "XLF",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGLS5Q9ZG83",
+      "ticker": "ARKK",
+      "name": "ARKK Inc",
+      "assetClass": "etf",
+      "exchangeMic": "ARCX",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ARKK",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG60D0F4QZ9",
+      "ticker": "BRK.B",
+      "name": "Berkshire Hathaway",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "BRK.B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "BRK B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "BRK/B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "BRK-B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG921D38MB8",
+      "ticker": "BF.B",
+      "name": "Brown-Forman",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "BF.B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "BF B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "BF/B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "BF-B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG8473GPHF2",
+      "ticker": "LEN.B",
+      "name": "Lennar",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "LEN.B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "LEN B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "LEN/B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "LEN-B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGJMF96N4P3",
+      "ticker": "HEI.A",
+      "name": "HEICO",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "HEI.A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "HEI A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "HEI/A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "HEI-A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGY8KY1BQN4",
+      "ticker": "MOG.A",
+      "name": "Moog",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "MOG.A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "MOG A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "MOG/A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "MOG-A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGLTFN7MVT2",
+      "ticker": "CWEN.A",
+      "name": "Clearway Energy",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "CWEN.A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "CWEN A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "CWEN/A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "CWEN-A",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGY1J4YHV51",
+      "ticker": "LGF.B",
+      "name": "Lions Gate",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "LGF.B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "LGF B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "LGF/B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "LGF-B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG46BXKQW26",
+      "ticker": "CRD.B",
+      "name": "Crawford",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "CRD.B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "CRD B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "CRD/B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "CRD-B",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGK149RK030",
+      "ticker": "WFC.PL",
+      "name": "WFC preferred series L",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "WFC.PL",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "WFC PL",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "WFC/PL",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "WFC-PL",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGV7MGTTC99",
+      "ticker": "BAC.PK",
+      "name": "BAC preferred series K",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "BAC.PK",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "BAC PK",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "BAC/PK",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "BAC-PK",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG2TQGYRDJ1",
+      "ticker": "SCHW.PD",
+      "name": "SCHW preferred series D",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "SCHW.PD",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "SCHW PD",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "SCHW/PD",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "SCHW-PD",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGXTPCVGXX6",
+      "ticker": "DWAC.WS",
+      "name": "DWAC warrant",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "DWAC.WS",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "DWAC WS",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "DWAC/WS",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "DWAC-WS",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGQ471L3R82",
+      "ticker": "IPOF.U",
+      "name": "IPOF unit",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "IPOF.U",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "IPOF U",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "IPOF/U",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "IPOF-U",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGV45TGQJJ9",
+      "ticker": "GHC.RT",
+      "name": "GHC right",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "GHC.RT",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "GHC RT",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "GHC/RT",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        },
+        {
+          "symbol": "GHC-RT",
+          "validFrom": "2010-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGDKGJB0XT7",
+      "ticker": "BABA",
+      "name": "BABA ADR",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "BABA",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGDGPM4VM77",
+      "ticker": "TSM",
+      "name": "TSM ADR",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "TSM",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG8GP37NF14",
+      "ticker": "NVO",
+      "name": "NVO ADR",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "NVO",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGNZTNFG494",
+      "ticker": "SAP",
+      "name": "SAP ADR",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "SAP",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGT14JZFSM9",
+      "ticker": "TM",
+      "name": "TM ADR",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "TM",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGPCGDPCFL8",
+      "ticker": "SHEL",
+      "name": "SHEL ADR",
+      "assetClass": "equity",
+      "exchangeMic": "XNYS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "SHEL",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG2D0SWSCG6",
+      "ticker": "META",
+      "name": "Meta Platforms",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "FB",
+          "validFrom": "2012-05-18T00:00:00.000Z",
+          "validTo": "2022-06-09T00:00:00.000Z"
+        },
+        {
+          "symbol": "META",
+          "validFrom": "2022-06-09T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG495MJGQR5",
+      "ticker": "XYZ",
+      "name": "Block",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "SQ",
+          "validFrom": "2015-11-19T00:00:00.000Z",
+          "validTo": "2025-01-13T00:00:00.000Z"
+        },
+        {
+          "symbol": "XYZ",
+          "validFrom": "2025-01-13T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGBRHYF0XQ1",
+      "ticker": "TWTR",
+      "name": "Twitter",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": false,
+      "mappings": [
+        {
+          "symbol": "TWTR",
+          "validFrom": "2013-11-07T00:00:00.000Z",
+          "validTo": "2022-10-28T00:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "figi": "BBGRCB7M7MH0",
+      "ticker": "BBBY",
+      "name": "Bed Bath & Beyond",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": false,
+      "mappings": [
+        {
+          "symbol": "BBBY",
+          "validFrom": "1992-06-01T00:00:00.000Z",
+          "validTo": "2023-09-29T00:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "figi": "BBG1Y9123R77",
+      "ticker": "CBRE",
+      "name": "Original CBRE listing",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": false,
+      "mappings": [
+        {
+          "symbol": "CBRE",
+          "validFrom": "1996-01-02T00:00:00.000Z",
+          "validTo": "2001-07-20T00:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "figi": "BBGDVNZ4W8J7",
+      "ticker": "CBRE",
+      "name": "CBRE Group",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "CBRE",
+          "validFrom": "2004-06-10T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGXVQD2NGV0",
+      "ticker": "FB",
+      "name": "A different company that took the freed FB ticker",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "FB",
+          "validFrom": "2024-03-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGD6K3SXH63",
+      "ticker": "ZZ001",
+      "name": "Filler 1",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ001",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG2XR41MBK5",
+      "ticker": "ZZ002",
+      "name": "Filler 2",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ002",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGW1SZNC554",
+      "ticker": "ZZ003",
+      "name": "Filler 3",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ003",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG10B5WFJX5",
+      "ticker": "ZZ004",
+      "name": "Filler 4",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ004",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG3Y4GH1F15",
+      "ticker": "ZZ005",
+      "name": "Filler 5",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ005",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGMCZ85PWH6",
+      "ticker": "ZZ006",
+      "name": "Filler 6",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ006",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGF4JJZ98N7",
+      "ticker": "ZZ007",
+      "name": "Filler 7",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ007",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG6WPK2FN17",
+      "ticker": "ZZ008",
+      "name": "Filler 8",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ008",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGLLLJ51FZ2",
+      "ticker": "ZZ009",
+      "name": "Filler 9",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ009",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG3V7BSVLN3",
+      "ticker": "ZZ010",
+      "name": "Filler 10",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ010",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGWPXD31KZ2",
+      "ticker": "ZZ011",
+      "name": "Filler 11",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ011",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG7LL6Z2H82",
+      "ticker": "ZZ012",
+      "name": "Filler 12",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ012",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGBYYFSNM19",
+      "ticker": "ZZ013",
+      "name": "Filler 13",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ013",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGG1C7B6V09",
+      "ticker": "ZZ014",
+      "name": "Filler 14",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ014",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGS2LC8VV55",
+      "ticker": "ZZ015",
+      "name": "Filler 15",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ015",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG5QGNXF4C5",
+      "ticker": "ZZ016",
+      "name": "Filler 16",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ016",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGYWC93SNT4",
+      "ticker": "ZZ017",
+      "name": "Filler 17",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ017",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGFSK01DS54",
+      "ticker": "ZZ018",
+      "name": "Filler 18",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ018",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG7M4PBQQ22",
+      "ticker": "ZZ019",
+      "name": "Filler 19",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ019",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGVF9GQRRZ0",
+      "ticker": "ZZ020",
+      "name": "Filler 20",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ020",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGFDXRCHBN6",
+      "ticker": "ZZ021",
+      "name": "Filler 21",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ021",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGPP2T723Y5",
+      "ticker": "ZZ022",
+      "name": "Filler 22",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ022",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG89LNYWQ53",
+      "ticker": "ZZ023",
+      "name": "Filler 23",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ023",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGZL43L16Y0",
+      "ticker": "ZZ024",
+      "name": "Filler 24",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ024",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGXJH22VK00",
+      "ticker": "ZZ025",
+      "name": "Filler 25",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ025",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGWZXZY5T36",
+      "ticker": "ZZ026",
+      "name": "Filler 26",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ026",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG9LDJ2JST5",
+      "ticker": "ZZ027",
+      "name": "Filler 27",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ027",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG0QC38G389",
+      "ticker": "ZZ028",
+      "name": "Filler 28",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ028",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGGC7XGD0M5",
+      "ticker": "ZZ029",
+      "name": "Filler 29",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ029",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG7YZTGFF07",
+      "ticker": "ZZ030",
+      "name": "Filler 30",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ030",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGSWYPDRGM7",
+      "ticker": "ZZ031",
+      "name": "Filler 31",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ031",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGKXPQ26X87",
+      "ticker": "ZZ032",
+      "name": "Filler 32",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ032",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG3MC54C3R7",
+      "ticker": "ZZ033",
+      "name": "Filler 33",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ033",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGZM2MWSZ01",
+      "ticker": "ZZ034",
+      "name": "Filler 34",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ034",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG8F0XYSP22",
+      "ticker": "ZZ035",
+      "name": "Filler 35",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ035",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGJYTXN67M8",
+      "ticker": "ZZ036",
+      "name": "Filler 36",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ036",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG83ZDR8BZ4",
+      "ticker": "ZZ037",
+      "name": "Filler 37",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ037",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGT9KHFDRV3",
+      "ticker": "ZZ038",
+      "name": "Filler 38",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ038",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG1S5T0M2F8",
+      "ticker": "ZZ039",
+      "name": "Filler 39",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ039",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGFCC3BKS50",
+      "ticker": "ZZ040",
+      "name": "Filler 40",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ040",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGY7SZ0V097",
+      "ticker": "ZZ041",
+      "name": "Filler 41",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ041",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGFR0H7WG56",
+      "ticker": "ZZ042",
+      "name": "Filler 42",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ042",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGRKLRFN2P7",
+      "ticker": "ZZ043",
+      "name": "Filler 43",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ043",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG7DQKQ1Y63",
+      "ticker": "ZZ044",
+      "name": "Filler 44",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ044",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG7XG28K8W5",
+      "ticker": "ZZ045",
+      "name": "Filler 45",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ045",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG59390DS45",
+      "ticker": "ZZ046",
+      "name": "Filler 46",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ046",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG24TCTN1Q4",
+      "ticker": "ZZ047",
+      "name": "Filler 47",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ047",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG4CGCGSSK7",
+      "ticker": "ZZ048",
+      "name": "Filler 48",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ048",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGH50GTH207",
+      "ticker": "ZZ049",
+      "name": "Filler 49",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ049",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGHTN3VDJX1",
+      "ticker": "ZZ050",
+      "name": "Filler 50",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ050",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGGJF2HVJ03",
+      "ticker": "ZZ051",
+      "name": "Filler 51",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ051",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGH21MSC1N8",
+      "ticker": "ZZ052",
+      "name": "Filler 52",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ052",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG34T44LPH7",
+      "ticker": "ZZ053",
+      "name": "Filler 53",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ053",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGR50W503Y8",
+      "ticker": "ZZ054",
+      "name": "Filler 54",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ054",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGT53K3RG56",
+      "ticker": "ZZ055",
+      "name": "Filler 55",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ055",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGGK1SB7V96",
+      "ticker": "ZZ056",
+      "name": "Filler 56",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ056",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG7686NK1Y8",
+      "ticker": "ZZ057",
+      "name": "Filler 57",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ057",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGD784LHT04",
+      "ticker": "ZZ058",
+      "name": "Filler 58",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ058",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGZS0R79XT1",
+      "ticker": "ZZ059",
+      "name": "Filler 59",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ059",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGQ7H97PRN5",
+      "ticker": "ZZ060",
+      "name": "Filler 60",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ060",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGH47GXVZZ1",
+      "ticker": "ZZ061",
+      "name": "Filler 61",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ061",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGNVPRKGX21",
+      "ticker": "ZZ062",
+      "name": "Filler 62",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ062",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG6XWDQBV24",
+      "ticker": "ZZ063",
+      "name": "Filler 63",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ063",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG0WDMBKKY4",
+      "ticker": "ZZ064",
+      "name": "Filler 64",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ064",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBG45T7LQFY4",
+      "ticker": "ZZ065",
+      "name": "Filler 65",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ065",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGZM6TWD2Q1",
+      "ticker": "ZZ066",
+      "name": "Filler 66",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ066",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGN68L0XGK1",
+      "ticker": "ZZ067",
+      "name": "Filler 67",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ067",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGXDLM2GD04",
+      "ticker": "ZZ068",
+      "name": "Filler 68",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ068",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGV2BN5J4S9",
+      "ticker": "ZZ069",
+      "name": "Filler 69",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ069",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGNHXQ0YB08",
+      "ticker": "ZZ070",
+      "name": "Filler 70",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ070",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGJSR634RP5",
+      "ticker": "ZZ071",
+      "name": "Filler 71",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ071",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGL44L56BX9",
+      "ticker": "ZZ072",
+      "name": "Filler 72",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ072",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGXKXC57R56",
+      "ticker": "ZZ073",
+      "name": "Filler 73",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ073",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGPZ9YM4K74",
+      "ticker": "ZZ074",
+      "name": "Filler 74",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ074",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    },
+    {
+      "figi": "BBGH9Q3FLG65",
+      "ticker": "ZZ075",
+      "name": "Filler 75",
+      "assetClass": "equity",
+      "exchangeMic": "XNAS",
+      "currency": "USD",
+      "active": true,
+      "mappings": [
+        {
+          "symbol": "ZZ075",
+          "validFrom": "2000-01-01T00:00:00.000Z",
+          "validTo": null
+        }
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "symbol": "AAPL",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG4H42M0TH5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "MSFT",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGJ8F0ZZH68",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "NVDA",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG84YW1RD69",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "AMZN",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG664BZL962",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "GOOGL",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGFTGFMLZ84",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "GOOG",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGYJG4MW9L0",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "TSLA",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGF0NK6TC48",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "JPM",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGK8V3SZCK6",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "XOM",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG4NM9CBQK4",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "UNH",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGRZSQ0F0H3",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "JNJ",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGG18BK3R21",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "V",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGZPVQPFNY7",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "PG",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGR6C35RQ55",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "MA",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGTQCQ8RW66",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "HD",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGGQ1B812Z3",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "CVX",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGMLCJ47RQ2",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "MRK",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGFQX7LM636",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ABBV",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGDTRNHN496",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "PEP",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG3SKF82V97",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "KO",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGS2Z0RH937",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "COST",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGLK5CN4R51",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "WMT",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG2D40DC565",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "MCD",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGSZ29R8TC4",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "CSCO",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG0ZSKZW717",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "CRM",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGYVMM40583",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ACN",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGTF64VSQC3",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ADBE",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGZL9P41MB8",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "AMD",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGNGTJ2L512",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "INTC",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG3PCCD8Q92",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "QCOM",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGP94PWR7L0",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "TXN",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG58GDZM5B5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "NFLX",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG740JVW9T4",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "CMCSA",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG28YP6KXD0",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "PFE",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG9R34V0TZ0",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "T",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGCHR5Y9TG4",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "VZ",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG69PN1H0X1",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "BAC",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG2LG9BZVS0",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "WFC",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGS7LBSQNM2",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "GS",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGCYGB23GD2",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "MS",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG84XCJ35P5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "F",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGBCB5M0123",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "GM",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGL21FJYDT8",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "GE",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGNMDQF5630",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "BA",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG1SG6Q1SP8",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "CAT",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGC98XKYRR0",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "DE",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGKFTD3MH62",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "MMM",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGYXQK4S394",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "HON",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGFK32NM1M3",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "LMT",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGXDT2300C6",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "RTX",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG0J7KSCYY3",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "SPY",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG8HK1KH155",
+      "why": "etf"
+    },
+    {
+      "symbol": "QQQ",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGNJF40DWY9",
+      "why": "etf"
+    },
+    {
+      "symbol": "IWM",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG17VR3YZ37",
+      "why": "etf"
+    },
+    {
+      "symbol": "VTI",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGMR5Z5NRX7",
+      "why": "etf"
+    },
+    {
+      "symbol": "VOO",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG0TPFY7H91",
+      "why": "etf"
+    },
+    {
+      "symbol": "EEM",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGK0F504TP1",
+      "why": "etf"
+    },
+    {
+      "symbol": "TLT",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGF77J6CYS8",
+      "why": "etf"
+    },
+    {
+      "symbol": "GLD",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGQ6J9NZ2F2",
+      "why": "etf"
+    },
+    {
+      "symbol": "XLF",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGBKNWDG3Q8",
+      "why": "etf"
+    },
+    {
+      "symbol": "ARKK",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGLS5Q9ZG83",
+      "why": "etf"
+    },
+    {
+      "symbol": "BRK.B",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG60D0F4QZ9",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "BRK.B",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG60D0F4QZ9",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "BRK B",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG60D0F4QZ9",
+      "why": "class share, space"
+    },
+    {
+      "symbol": "BRK-B",
+      "provider": "tiingo",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG60D0F4QZ9",
+      "why": "class share, dash"
+    },
+    {
+      "symbol": "BF.B",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG921D38MB8",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "BF.B",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG921D38MB8",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "BF B",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG921D38MB8",
+      "why": "class share, space"
+    },
+    {
+      "symbol": "BF-B",
+      "provider": "tiingo",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG921D38MB8",
+      "why": "class share, dash"
+    },
+    {
+      "symbol": "LEN.B",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG8473GPHF2",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "LEN.B",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG8473GPHF2",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "LEN B",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG8473GPHF2",
+      "why": "class share, space"
+    },
+    {
+      "symbol": "LEN-B",
+      "provider": "tiingo",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG8473GPHF2",
+      "why": "class share, dash"
+    },
+    {
+      "symbol": "HEI.A",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGJMF96N4P3",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "HEI.A",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGJMF96N4P3",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "HEI A",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGJMF96N4P3",
+      "why": "class share, space"
+    },
+    {
+      "symbol": "HEI-A",
+      "provider": "tiingo",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGJMF96N4P3",
+      "why": "class share, dash"
+    },
+    {
+      "symbol": "MOG.A",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGY8KY1BQN4",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "MOG.A",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGY8KY1BQN4",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "MOG A",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGY8KY1BQN4",
+      "why": "class share, space"
+    },
+    {
+      "symbol": "MOG-A",
+      "provider": "tiingo",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGY8KY1BQN4",
+      "why": "class share, dash"
+    },
+    {
+      "symbol": "CWEN.A",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGLTFN7MVT2",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "CWEN.A",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGLTFN7MVT2",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "CWEN A",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGLTFN7MVT2",
+      "why": "class share, space"
+    },
+    {
+      "symbol": "CWEN-A",
+      "provider": "tiingo",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGLTFN7MVT2",
+      "why": "class share, dash"
+    },
+    {
+      "symbol": "LGF.B",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGY1J4YHV51",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "LGF.B",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGY1J4YHV51",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "LGF B",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGY1J4YHV51",
+      "why": "class share, space"
+    },
+    {
+      "symbol": "LGF-B",
+      "provider": "tiingo",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGY1J4YHV51",
+      "why": "class share, dash"
+    },
+    {
+      "symbol": "CRD.B",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG46BXKQW26",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "CRD.B",
+      "provider": "alpaca",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG46BXKQW26",
+      "why": "class share, dot"
+    },
+    {
+      "symbol": "CRD B",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG46BXKQW26",
+      "why": "class share, space"
+    },
+    {
+      "symbol": "CRD-B",
+      "provider": "tiingo",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG46BXKQW26",
+      "why": "class share, dash"
+    },
+    {
+      "symbol": "WFC.PL",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGK149RK030",
+      "why": "preferred series L"
+    },
+    {
+      "symbol": "WFC PL",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGK149RK030",
+      "why": "preferred series L, space"
+    },
+    {
+      "symbol": "BAC.PK",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGV7MGTTC99",
+      "why": "preferred series K"
+    },
+    {
+      "symbol": "BAC PK",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGV7MGTTC99",
+      "why": "preferred series K, space"
+    },
+    {
+      "symbol": "SCHW.PD",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG2TQGYRDJ1",
+      "why": "preferred series D"
+    },
+    {
+      "symbol": "SCHW PD",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG2TQGYRDJ1",
+      "why": "preferred series D, space"
+    },
+    {
+      "symbol": "DWAC.WS",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGXTPCVGXX6",
+      "why": "warrant"
+    },
+    {
+      "symbol": "DWAC WS",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGXTPCVGXX6",
+      "why": "warrant, space"
+    },
+    {
+      "symbol": "IPOF.U",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGQ471L3R82",
+      "why": "unit"
+    },
+    {
+      "symbol": "IPOF U",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGQ471L3R82",
+      "why": "unit, space"
+    },
+    {
+      "symbol": "GHC.RT",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGV45TGQJJ9",
+      "why": "right"
+    },
+    {
+      "symbol": "GHC RT",
+      "provider": "databento",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGV45TGQJJ9",
+      "why": "right, space"
+    },
+    {
+      "symbol": "BABA",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGDKGJB0XT7",
+      "why": "adr"
+    },
+    {
+      "symbol": "TSM",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGDGPM4VM77",
+      "why": "adr"
+    },
+    {
+      "symbol": "NVO",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG8GP37NF14",
+      "why": "adr"
+    },
+    {
+      "symbol": "SAP",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGNZTNFG494",
+      "why": "adr"
+    },
+    {
+      "symbol": "TM",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGT14JZFSM9",
+      "why": "adr"
+    },
+    {
+      "symbol": "SHEL",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGPCGDPCFL8",
+      "why": "adr"
+    },
+    {
+      "symbol": "FB",
+      "provider": "polygon",
+      "asOf": "2021-06-01T00:00:00.000Z",
+      "expectFigi": "BBG2D0SWSCG6",
+      "why": "pre-rename spelling, in window"
+    },
+    {
+      "symbol": "META",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG2D0SWSCG6",
+      "why": "post-rename spelling"
+    },
+    {
+      "symbol": "META",
+      "provider": "polygon",
+      "asOf": "2021-06-01T00:00:00.000Z",
+      "expectFigi": null,
+      "why": "post-rename spelling before it existed"
+    },
+    {
+      "symbol": "SQ",
+      "provider": "alpaca",
+      "asOf": "2020-01-02T00:00:00.000Z",
+      "expectFigi": "BBG495MJGQR5",
+      "why": "pre-rename spelling"
+    },
+    {
+      "symbol": "XYZ",
+      "provider": "alpaca",
+      "asOf": "2025-06-02T00:00:00.000Z",
+      "expectFigi": "BBG495MJGQR5",
+      "why": "post-rename spelling"
+    },
+    {
+      "symbol": "TWTR",
+      "provider": "polygon",
+      "asOf": "2021-06-01T00:00:00.000Z",
+      "expectFigi": "BBGBRHYF0XQ1",
+      "why": "delisted, queried in window"
+    },
+    {
+      "symbol": "TWTR",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": null,
+      "why": "delisted, queried after delisting"
+    },
+    {
+      "symbol": "BBBY",
+      "provider": "polygon",
+      "asOf": "2022-01-03T00:00:00.000Z",
+      "expectFigi": "BBGRCB7M7MH0",
+      "why": "delisted, queried in window"
+    },
+    {
+      "symbol": "BBBY",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": null,
+      "why": "delisted, queried after delisting"
+    },
+    {
+      "symbol": "CBRE",
+      "provider": "polygon",
+      "asOf": "1999-03-01T00:00:00.000Z",
+      "expectFigi": "BBG1Y9123R77",
+      "why": "reused ticker, first tenant"
+    },
+    {
+      "symbol": "CBRE",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGDVNZ4W8J7",
+      "why": "reused ticker, second tenant"
+    },
+    {
+      "symbol": "CBRE",
+      "provider": "polygon",
+      "asOf": "2003-01-02T00:00:00.000Z",
+      "expectFigi": null,
+      "why": "reused ticker, gap between tenants"
+    },
+    {
+      "symbol": "FB",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGXVQD2NGV0",
+      "why": "freed ticker, new tenant"
+    },
+    {
+      "symbol": "FB",
+      "provider": "polygon",
+      "asOf": "2019-01-02T00:00:00.000Z",
+      "expectFigi": "BBG2D0SWSCG6",
+      "why": "freed ticker, old tenant"
+    },
+    {
+      "symbol": "FB",
+      "provider": "polygon",
+      "asOf": "2023-01-03T00:00:00.000Z",
+      "expectFigi": null,
+      "why": "freed ticker, gap"
+    },
+    {
+      "symbol": "ZZ001",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGD6K3SXH63",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ002",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG2XR41MBK5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ003",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGW1SZNC554",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ004",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG10B5WFJX5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ005",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG3Y4GH1F15",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ006",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGMCZ85PWH6",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ007",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGF4JJZ98N7",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ008",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG6WPK2FN17",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ009",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGLLLJ51FZ2",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ010",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG3V7BSVLN3",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ011",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGWPXD31KZ2",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ012",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG7LL6Z2H82",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ013",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGBYYFSNM19",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ014",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGG1C7B6V09",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ015",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGS2LC8VV55",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ016",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG5QGNXF4C5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ017",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGYWC93SNT4",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ018",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGFSK01DS54",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ019",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG7M4PBQQ22",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ020",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGVF9GQRRZ0",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ021",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGFDXRCHBN6",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ022",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGPP2T723Y5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ023",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG89LNYWQ53",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ024",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGZL43L16Y0",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ025",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGXJH22VK00",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ026",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGWZXZY5T36",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ027",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG9LDJ2JST5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ028",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG0QC38G389",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ029",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGGC7XGD0M5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ030",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG7YZTGFF07",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ031",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGSWYPDRGM7",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ032",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGKXPQ26X87",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ033",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG3MC54C3R7",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ034",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGZM2MWSZ01",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ035",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG8F0XYSP22",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ036",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGJYTXN67M8",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ037",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG83ZDR8BZ4",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ038",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGT9KHFDRV3",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ039",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG1S5T0M2F8",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ040",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGFCC3BKS50",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ041",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGY7SZ0V097",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ042",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGFR0H7WG56",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ043",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGRKLRFN2P7",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ044",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG7DQKQ1Y63",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ045",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG7XG28K8W5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ046",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG59390DS45",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ047",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG24TCTN1Q4",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ048",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG4CGCGSSK7",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ049",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGH50GTH207",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ050",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGHTN3VDJX1",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ051",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGGJF2HVJ03",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ052",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGH21MSC1N8",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ053",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG34T44LPH7",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ054",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGR50W503Y8",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ055",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGT53K3RG56",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ056",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGGK1SB7V96",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ057",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG7686NK1Y8",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ058",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGD784LHT04",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ059",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGZS0R79XT1",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ060",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGQ7H97PRN5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ061",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGH47GXVZZ1",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ062",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGNVPRKGX21",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ063",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG6XWDQBV24",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ064",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG0WDMBKKY4",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ065",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBG45T7LQFY4",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ066",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGZM6TWD2Q1",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ067",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGN68L0XGK1",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ068",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGXDLM2GD04",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ069",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGV2BN5J4S9",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ070",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGNHXQ0YB08",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ071",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGJSR634RP5",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ072",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGL44L56BX9",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ073",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGXKXC57R56",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ074",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGPZ9YM4K74",
+      "why": "plain ticker"
+    },
+    {
+      "symbol": "ZZ075",
+      "provider": "polygon",
+      "asOf": "2024-06-03T00:00:00.000Z",
+      "expectFigi": "BBGH9Q3FLG65",
+      "why": "plain ticker"
+    }
+  ]
+}

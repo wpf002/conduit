@@ -64,3 +64,21 @@ model ProviderQuota {
   monthlyCents Int?
   updatedAt    DateTime @updatedAt
 }
+
+/// Symbols OpenFIGI could not resolve. TTL'd so a new listing is not stuck forever.
+model UnresolvedSymbol {
+  id          String   @id @default(cuid())
+  /// '*' for a provider-neutral lookup. Not null: Postgres treats NULLs as distinct, so a
+  /// nullable column in a unique constraint would let the same miss insert repeatedly.
+  provider    String   @default("*")
+  symbol      String
+  assetClass  String   @default("*")
+  reason      String
+  attempts    Int      @default(1)
+  firstSeenAt DateTime @default(now())
+  lastTriedAt DateTime @default(now())
+  expiresAt   DateTime
+
+  @@unique([provider, symbol, assetClass])
+  @@index([expiresAt])
+}
