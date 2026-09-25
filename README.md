@@ -130,6 +130,22 @@ Phase 5 is the go/no-go gate for product-ization, and three of its four outcomes
 staying an internal package. See [docs/phase-5-dogfood.md](docs/phase-5-dogfood.md) and
 [docs/migration.md](docs/migration.md).
 
+## Branch protection
+
+`main` requires the `ci` check and blocks force pushes. To reapply it, send a JSON body — the
+shorthand form sends `strict` as a string and the API rejects it:
+
+```bash
+gh api -X PUT repos/wpf002/conduit/branches/main/protection --input - << 'JSON'
+{
+  "required_status_checks": { "strict": true, "contexts": ["ci"] },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null
+}
+JSON
+```
+
 ## Toolchain
 
 Two dependencies are deliberately held back from `latest`, and `pnpm up --latest` will try to move
