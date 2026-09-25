@@ -21,6 +21,11 @@ export interface FakeAdapterOptions {
   readonly maxConsecutiveFailures?: number;
   /** Simulated snapshot latency, for the lowest-latency strategy. */
   readonly snapshotLatencyMs?: number;
+  /**
+   * How old the data a snapshot returns is. 0 means the market is trading; a large value is what a
+   * closed market looks like, since the last print stays the last print all night.
+   */
+  readonly snapshotAgeMs?: number;
   readonly snapshotError?: Error;
   /** Throws synchronously from stream(), the way a CoverageError from a real adapter would. */
   readonly streamError?: Error;
@@ -74,7 +79,8 @@ export class FakeAdapter implements ProviderAdapter {
       throw this.#options.snapshotError;
     }
     this.#health.recordMessage(req.symbols.length);
-    return req.symbols.map((symbol) => this.quote(symbol, 1n));
+    const ageNs = BigInt(this.#options.snapshotAgeMs ?? 0) * 1_000_000n;
+    return req.symbols.map((symbol) => this.quote(symbol, nowNs() - ageNs));
   }
 
   stream(req: StreamRequest): AsyncIterable<CdmMessage> {

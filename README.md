@@ -206,9 +206,15 @@ The router does three things, in this order:
 
 1. **Coverage.** Which of your configured keys can serve this symbol, schema, and asset class at
    all. A gap is reported as a `CoverageError` naming what you have configured.
-2. **Health.** Consecutive failures, message staleness, and rate-limit responses mark a provider
-   degraded; the subscription moves to the next covering provider and fails back when the first one
-   recovers.
+2. **Health.** Consecutive failures and disconnection move the subscription to the next covering
+   provider, and it fails back when the first one recovers.
+
+   Staleness is treated differently, because it is not evidence on its own. Outside market hours no
+   provider sends anything, so an absolute "no message for N seconds" rule marks every candidate
+   stale at once and switches on every tick, all night. Instead the router asks a standby for a
+   snapshot: if that comes back with current data the market is trading and the active provider is
+   genuinely broken, and if it is equally old the market is closed and nothing is wrong. One request
+   per quiet period, not per tick.
 3. **Order.** On a switch, sequence continuity beats completeness. A provider that replays history
    as it comes up has that history dropped, per symbol, against the last timestamp the consumer
    already saw. `subscription.droppedOutOfOrder` counts it.

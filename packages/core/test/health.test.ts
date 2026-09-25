@@ -7,8 +7,26 @@ function tracker(staleAfterMs = 5_000, maxConsecutiveFailures = 3) {
 }
 
 describe('HealthTracker', () => {
-  it('starts down, since nothing has connected yet', () => {
-    expect(tracker().snapshot().state).toBe('down');
+  it('starts unknown, because nothing has been attempted', () => {
+    // 'down' would be a claim that something failed, which would make the router skip a provider it
+    // has never tried and would make a slow socket connect look like an outage.
+    expect(tracker().snapshot().state).toBe('unknown');
+  });
+
+  it('becomes down once something has actually failed', () => {
+    const t = tracker();
+    t.recordFailure(new TransportError('refused'));
+    expect(t.snapshot().state).toBe('degraded');
+    t.recordDisconnected();
+    expect(t.snapshot().state).toBe('degraded');
+  });
+
+  it('is down after a connection is lost, not unknown', () => {
+    const t = tracker();
+    t.recordConnected();
+    t.recordMessage();
+    t.recordDisconnected();
+    expect(t.snapshot().state).toBe('down');
   });
 
   it('is healthy once connected with a fresh message', () => {

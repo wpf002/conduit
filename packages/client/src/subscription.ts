@@ -1,5 +1,6 @@
 import {
   CoverageError,
+  ageMs,
   isConduitError,
   isMarketMessage,
   nowNs,
@@ -53,6 +54,9 @@ export class ManagedSubscription implements Subscription {
   #closed = false;
   #switching: Promise<void> | undefined;
   #attachedAtMs = 0;
+  /** True while every candidate is silent, so the quiet period is reported once rather than per tick. */
+  #quiet = false;
+  #lastProbeAtMs = 0;
   /** Last forwarded venue timestamp per symbol. */
   #highWater = new Map<string, bigint>();
 
@@ -230,6 +234,89 @@ export class ManagedSubscription implements Subscription {
     await this.#switch(next, reason);
   }
 
+  /**
+   * A candidate whose data is meaningfully fresher than the active one's. "Meaningfully" is half the
+   * active provider's silence: a provider that is nearly as quiet is not evidence of anything, and
+   * switching to it would just move the problem.
+   */
+  #fresherCandidate(activeIndex: number, activeAgeMs: number): number | undefined {
+    const threshold = activeAgeMs / 2;
+    for (const [index, candidate] of this.#candidates.entries()) {
+      if (index === activeIndex) continue;
+      const health = candidate.health();
+      if (health.state === 'down') continue;
+      // Never having received a message is not the same as having received one recently.
+      if (health.lastMessageAgeMs === undefined) continue;
+      if (health.lastMessageAgeMs < threshold) return index;
+    }
+    return undefined;
+  }
+
+  /**
+   * Asks a standby whether the market is trading. A snapshot is one request and answers the only
+   * question that matters when the active provider goes quiet: is everything quiet, or just this one?
+   *
+   * Switches when a standby returns data meaningfully fresher than the active provider's silence.
+   * Stays put when the standby's data is just as old, which is what a closed market looks like, and
+   * says so once rather than every tick.
+   */
+  async #probeForOpenMarket(activeAgeMs: number): Promise<void> {
+    if (this.#closed) return;
+    const threshold = activeAgeMs / 2;
+    const probeSymbols = this.#request.symbols.slice(0, 1);
+
+    for (const [index, candidate] of this.#candidates.entries()) {
+      if (index === this.#activeIndex) continue;
+      // No health pre-filter: the snapshot itself is the check, and a provider that has never been
+      // used reports 'unknown', which is not a reason to skip it.
+
+      try {
+        const quotes = await candidate.snapshot({
+          symbols: probeSymbols,
+          ...(this.#request.assetClass ? { assetClass: this.#request.assetClass } : {}),
+        });
+        const freshest = quotes.reduce<number | undefined>((best, quote) => {
+          const age = ageMs(quote.tsEvent);
+          return best === undefined || age < best ? age : best;
+        }, undefined);
+
+        if (freshest !== undefined && freshest < threshold) {
+          this.#quiet = false;
+          await this.#switch(
+            index,
+            `no message for ${activeAgeMs}ms while ${candidate.id} has data ${freshest}ms old`,
+          );
+          return;
+        }
+        // The standby answered and its data is just as old. The market is closed.
+        this.#reportQuiet(activeAgeMs, `${candidate.id} is ${freshest ?? 'equally'}ms behind too`);
+        return;
+      } catch {
+        // This standby cannot be probed — a replay-only provider, or its own key is bad. Try the next.
+        continue;
+      }
+    }
+
+    // Nothing could be probed, so there is no evidence either way. Doing nothing forever is worse
+    // than one switch, so fall back to the absolute rule.
+    const next = this.#nextCandidate(this.#activeIndex);
+    if (next !== undefined) {
+      await this.#switch(next, `no message for ${activeAgeMs}ms and no standby could be probed`);
+    }
+  }
+
+  #reportQuiet(activeAgeMs: number, detail: string): void {
+    if (this.#quiet) return;
+    this.#quiet = true;
+    this.#emit({
+      type: 'probe',
+      provider: this.activeProvider,
+      schema: this.#request.schema,
+      reason: `every provider is silent (${activeAgeMs}ms; ${detail}); treating this as a closed market rather than failing over`,
+      atMs: Date.now(),
+    });
+  }
+
   /** The next covering provider that is not already known to be down, preferring earlier ones. */
   #nextCandidate(excluding: number): number | undefined {
     const ordered = [
@@ -281,21 +368,53 @@ export class ManagedSubscription implements Subscription {
       const active = this.#candidates[this.#activeIndex]!;
       const health = active.health();
 
+      // Failures and disconnection are evidence about this provider specifically.
       const failing = health.consecutiveFailures >= maxConsecutiveFailures;
+      const down = health.state === 'down';
       const stale =
         health.lastMessageAgeMs !== undefined && health.lastMessageAgeMs > staleAfterMs;
-      const down = health.state === 'down';
 
-      if (failing || stale || down) {
+      if (failing || down) {
         const reason = failing
           ? `${health.consecutiveFailures} consecutive failures`
-          : stale
-            ? `no message for ${health.lastMessageAgeMs}ms`
-            : `health state ${health.state}`;
+          : `health state ${health.state}`;
         const next = this.#nextCandidate(this.#activeIndex);
         if (next !== undefined) void this.#switch(next, reason);
         return;
       }
+
+      /*
+       * Staleness is relative, not absolute. Outside market hours no provider sends anything, so an
+       * absolute rule marks every candidate stale at once and the subscription switches every tick
+       * for as long as the market is closed — all night, every night, and through every holiday.
+       *
+       * A silent provider is only worth leaving if somewhere else is measurably less silent. If
+       * everything is quiet, the market is closed or the venue is down, and switching achieves
+       * nothing but churn.
+       */
+      if (stale) {
+        const activeAgeMs = health.lastMessageAgeMs!;
+
+        // Cheap path: another candidate is already streaming recent data for someone else.
+        const fresher = this.#fresherCandidate(this.#activeIndex, activeAgeMs);
+        if (fresher !== undefined) {
+          void this.#switch(
+            fresher,
+            `no message for ${activeAgeMs}ms while ${this.#candidates[fresher]!.id} is current`,
+          );
+          return;
+        }
+
+        // Otherwise ask. One snapshot answers whether anything is trading at all, and it is the only
+        // evidence available: the router streams from the active provider only, so a standby has no
+        // message history to compare against.
+        const probeBackoffMs = Math.max(probeIntervalMs, staleAfterMs);
+        if (Date.now() - this.#lastProbeAtMs < probeBackoffMs) return;
+        this.#lastProbeAtMs = Date.now();
+        void this.#probeForOpenMarket(activeAgeMs);
+        return;
+      }
+      this.#quiet = false;
 
       // Fail back to a higher-priority provider once it has looked healthy for healthWindowMs.
       if (this.#activeIndex === 0) return;
