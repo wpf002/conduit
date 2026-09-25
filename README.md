@@ -219,6 +219,11 @@ The router does three things, in this order:
    as it comes up has that history dropped, per symbol, against the last timestamp the consumer
    already saw. `subscription.droppedOutOfOrder` counts it.
 
+Gap detection is available but **off by default**. Both Polygon and Databento number messages
+per channel rather than per instrument, so a filtered subscription sees a "gap" between every pair of
+messages for the same symbol. Set `sequenceScope` only if you know your feed numbers in a way that
+matches what you subscribed to; `packages/providers/src/sequence.ts` explains the three cases.
+
 It is explicitly not cost minimization. Cost routing only paid off under subscription pooling, and
 pooling is the part the licences prohibit.
 

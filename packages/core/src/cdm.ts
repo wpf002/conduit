@@ -76,7 +76,11 @@ export interface DepthSnapshot extends CdmBase {
   readonly asks: readonly DepthLevel[];
 }
 
-export type ControlKind = 'provider_switch' | 'provider_degraded' | 'provider_recovered';
+export type ControlKind =
+  | 'provider_switch'
+  | 'provider_degraded'
+  | 'provider_recovered'
+  | 'sequence_gap';
 
 /**
  * Emitted on the consumer's own stream so a strategy can react to a failover instead of
@@ -86,10 +90,18 @@ export interface ControlMessage {
   readonly kind: 'control';
   readonly control: ControlKind;
   readonly provider: ProviderId;
+  /** Set on 'provider_switch'. */
   readonly previousProvider?: ProviderId;
   readonly reason: string;
   readonly symbols: readonly string[];
   readonly tsConduitRecv: bigint;
+  /** Set on 'sequence_gap': how many messages the provider's own numbering says are missing. */
+  readonly gap?: {
+    readonly symbol: string;
+    readonly expectedSeq: bigint;
+    readonly receivedSeq: bigint;
+    readonly missing: bigint;
+  };
 }
 
 export type MarketMessage = QuoteTick | TradeTick | Bar | DepthSnapshot;
