@@ -69,7 +69,7 @@ The provider table currently promises more than the code does.
 
 | Gap | Resolution |
 |---|---|
-| Tiingo is in the provider table with no adapter | Build it (bars_1d only) or remove the row |
+| ~~Tiingo is in the provider table with no adapter~~ | **Done.** bars_1d, replay-only, raw prices by default with an `adjusted` option |
 | Databento is listed as a provider but is replay-only | Either implement the live DBN/TCP gateway with CRAM auth, or state replay-only in the table itself rather than in a linked doc |
 | `depth_10` exists only as Databento replay | No live depth at all. Say so, or build it. |
 | Polygon and Alpaca adapters are equity/ETF only | Options and futures throw `CoverageError`. Either extend one adapter or narrow the claim. |
@@ -80,6 +80,11 @@ not reconstructible from published docs. It needs a key and a packet capture bef
 
 **Acceptance:** a test that asserts each adapter's `capabilities` and supported asset classes, and
 fails if the README table and the code disagree. Make the docs a test.
+
+**Done** — `packages/providers/test/readme-conformance.test.ts` parses the table out of the README
+and checks every cell against the built adapters. It caught a real bug on its first run: the Polygon
+adapter accepted a replay window and ignored it, so a historical request silently returned live data.
+It now throws `CoverageError`.
 
 *Effort: 2–4 weeks, dominated by the Databento decision.*
 

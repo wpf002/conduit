@@ -1,6 +1,7 @@
 export * from './polygon/index.js';
 export * from './alpaca/index.js';
 export * from './databento/index.js';
+export * from './tiingo/index.js';
 export { AsyncQueue, type AsyncQueueOptions } from './queue.js';
 export { ReconnectingSocket, type ReconnectingSocketOptions, type SocketContext } from './ws.js';
 export { SubscriptionRegistry } from './subscriptions.js';

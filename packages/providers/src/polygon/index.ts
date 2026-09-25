@@ -179,6 +179,14 @@ class PolygonAdapter implements ProviderAdapter {
   stream(req: StreamRequest): AsyncIterable<CdmMessage> {
     const assetClass = req.assetClass ?? 'equity';
     this.#assertSupported(req.schema, assetClass);
+    if (req.start !== undefined || req.end !== undefined) {
+      // Accepting and ignoring a replay window would hand back live data for a historical request,
+      // which is worse than refusing: the caller has no way to tell.
+      throw new CoverageError(
+        'polygon adapter streams live only; it has no replay path. Use snapshot for point-in-time.',
+        { provider: PROVIDER, schema: req.schema, assetClass },
+      );
+    }
     if (this.#closed) {
       throw new TransportError('polygon adapter is closed', { provider: PROVIDER });
     }

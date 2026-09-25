@@ -52,15 +52,21 @@ for await (const message of sub) {
 
 ## Supported providers
 
-| Provider   | Quotes | Trades | Bars    | Depth | Live | Replay | Status |
-|------------|--------|--------|---------|-------|------|--------|--------|
-| Polygon    | ✅     | ✅     | 1m      | —     | ✅   | —      | Phase 1 |
-| Alpaca     | ✅     | ✅     | 1m, 1d  | —     | ✅   | —      | Phase 2 |
-| Databento  | ✅     | ✅     | 1m, 1d  | ✅    | —    | ✅     | Phase 2 |
-| Tiingo     | —      | —      | 1d      | —     | —    | ✅     | Phase 3 |
+| Provider | Quotes | Trades | Bars | Depth | Live | Replay |
+|---|---|---|---|---|---|---|
+| Polygon | yes | yes | 1m | no | yes | no |
+| Alpaca | yes | yes | 1m, 1d | no | yes | no |
+| Databento | yes | yes | 1m, 1d | yes | no | yes |
+| Tiingo | no | no | 1d | no | no | yes |
 
-Databento is replay-only: its live feed is binary DBN over a raw TCP gateway, which is a different
-transport from everything else here. See [docs/databento-live.md](docs/databento-live.md).
+**Live** means a subscription with no time window. **Replay** means one with `start` and `end`. An
+adapter that cannot serve a shape throws `CoverageError` rather than quietly returning the other one,
+and [a test](packages/providers/test/readme-conformance.test.ts) fails if this table and the code
+disagree.
+
+Databento and Tiingo are replay-only. Databento's live feed is binary DBN over a raw TCP gateway, a
+different transport from everything else here — see [docs/databento-live.md](docs/databento-live.md).
+Tiingo has no streaming feed at all.
 
 ## Packages
 
@@ -72,6 +78,11 @@ transport from everything else here. See [docs/databento-live.md](docs/databento
 | `@conduit/ledger` | Quota accounting and spend attribution |
 | `@conduit/client` | Failover router and subscription manager |
 | `@conduit/cli` | `conduit doctor`, `conduit spend`, `conduit resolve` |
+
+Tiingo serves end-of-day bars only, and returns both raw and split-adjusted prices for each. The
+adapter emits raw by default — what printed on the day — with the adjusted set in `raw`. Pass
+`priceField: 'adjusted'` if you want the comparable-across-splits numbers; they are different values,
+not a formatting choice.
 
 ## CLI
 
