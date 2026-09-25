@@ -434,3 +434,46 @@ describe('sequence gaps', () => {
     await iterator.return?.();
   });
 });
+
+describe('backpressure', () => {
+  it('tells the consumer on its own stream when it starts losing data', async () => {
+    fake = await startFakePolygon();
+    adapter = connect({ highWaterMark: 4 });
+    const stream = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' });
+    const iterator = stream[Symbol.asyncIterator]();
+    await waitFor(() => fake!.subscribeFrames.length > 0);
+
+    // Far more than the buffer holds, with nobody reading yet.
+    for (let i = 0; i < 40; i += 1) fake.send(quotePayload('AAPL', i));
+    await new Promise((r) => setTimeout(r, 50));
+
+    const seen: CdmMessage[] = [];
+    for (let i = 0; i < 5; i += 1) {
+      const next = await iterator.next();
+      if (next.done) break;
+      seen.push(next.value as CdmMessage);
+    }
+
+    const notice = seen.find((m) => isControl(m) && m.control === 'backpressure');
+    expect(notice, 'a backpressure control message should have arrived').toBeDefined();
+    expect(isControl(notice!) && notice!.backpressure).toMatchObject({ highWaterMark: 4 });
+    expect(isControl(notice!) && notice!.symbols).toEqual(['AAPL']);
+    await iterator.return?.();
+  });
+
+  it('says nothing when the consumer keeps up', async () => {
+    fake = await startFakePolygon();
+    adapter = connect({ highWaterMark: 1_000 });
+    const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
+      Symbol.asyncIterator
+    ]();
+    await waitFor(() => fake!.subscribeFrames.length > 0);
+
+    for (let i = 0; i < 10; i += 1) {
+      fake.send(quotePayload('AAPL', i));
+      const next = (await iterator.next()).value as CdmMessage;
+      expect(next.kind).toBe('quote');
+    }
+    await iterator.return?.();
+  });
+});

@@ -41,14 +41,30 @@ const sub = await conduit.subscribe({
 });
 
 for await (const message of sub) {
-  // Failovers are announced on the same stream, ahead of the data they explain.
+  // Control messages arrive on the same stream, ahead of the data they explain.
   if (message.kind === 'control') {
-    console.warn(message.control, message.previousProvider, '->', message.provider, message.reason);
+    console.warn(message.control, message.reason);
     continue;
   }
   console.log(message.symbol, message.bidPx, message.askPx, message.tsEvent);
 }
 ```
+
+### Control messages
+
+| `control` | Means |
+|---|---|
+| `provider_switch` | the subscription moved; `previousProvider` is where it came from |
+| `provider_degraded` | under the `manual` strategy, a provider failed and nothing switched |
+| `provider_recovered` | a higher-priority provider came back |
+| `sequence_gap` | the provider's own numbering says messages are missing; `gap` has the count |
+| `backpressure` | **your consumer is behind and data is being discarded**; `backpressure` has the numbers |
+| `backpressure_recovered` | it caught up, with the episode's total loss |
+
+Backpressure is the one to handle. A consumer slower than the feed cannot be rescued by buffering, so
+the queue bounds memory by discarding the oldest messages — data that consumer will never see. The
+notice is delivered ahead of whatever survived and cannot itself be dropped. Ignoring it means a
+strategy silently trading on a feed with holes in it.
 
 ## Supported providers
 

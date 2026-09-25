@@ -80,7 +80,9 @@ export type ControlKind =
   | 'provider_switch'
   | 'provider_degraded'
   | 'provider_recovered'
-  | 'sequence_gap';
+  | 'sequence_gap'
+  | 'backpressure'
+  | 'backpressure_recovered';
 
 /**
  * Emitted on the consumer's own stream so a strategy can react to a failover instead of
@@ -101,6 +103,16 @@ export interface ControlMessage {
     readonly expectedSeq: bigint;
     readonly receivedSeq: bigint;
     readonly missing: bigint;
+  };
+  /**
+   * Set on 'backpressure' and 'backpressure_recovered'. The consumer is not keeping up and the
+   * oldest messages are being discarded to bound memory — data the consumer will never see.
+   */
+  readonly backpressure?: {
+    readonly droppedThisEpisode: number;
+    readonly droppedTotal: number;
+    readonly buffered: number;
+    readonly highWaterMark: number;
   };
 }
 

@@ -262,6 +262,7 @@ class AlpacaAdapter implements ProviderAdapter {
       req.schema,
       req.symbols,
       this.#options.highWaterMark ?? 100_000,
+      PROVIDER,
     );
 
     const added = this.#registry.add(req.schema, req.symbols);
