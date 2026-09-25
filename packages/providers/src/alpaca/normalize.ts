@@ -13,6 +13,12 @@ import { alpacaMic } from '../venues.js';
 import { alpacaTradeFlags } from './conditions.js';
 
 const PROVIDER = 'alpaca' as const;
+
+/**
+ * Alpaca documents stocks quote sizes as round lots, and still does — unlike Massive, which moved
+ * to shares on 2025-11-03. The two feeds genuinely disagree, so the multiplier is per adapter, not
+ * shared. Trade sizes are shares on both. See docs/cdm-draft.md row 7.
+ */
 const LOT_SIZE = 100;
 const MINUTE_NS = 60_000n * NS_PER_MS;
 const DAY_NS = 86_400_000n * NS_PER_MS;

@@ -53,6 +53,7 @@ export interface PolygonOptions {
   readonly pongTimeoutMs?: number;
   readonly highWaterMark?: number;
   readonly resolveFigi?: (symbol: string) => string;
+  /** 'shares' by default. Pass 'lots' only for flat files dated before 2025-11-03. */
   readonly quoteSizeUnits?: 'lots' | 'shares';
   readonly includeRaw?: boolean;
   /** Quota accounting. Hand it `ledger.hooksFor('polygon')`. */

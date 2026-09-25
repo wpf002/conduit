@@ -138,7 +138,7 @@ describe('polygon stream', () => {
     expect(first.done).toBe(false);
     const message = first.value as CdmMessage;
     expect(isQuote(message) && message.symbol).toBe('AAPL');
-    expect(isQuote(message) && message.bidSz).toBe(300);
+    expect(isQuote(message) && message.bidSz).toBe(3);
     expect(adapter.health().state).toBe('healthy');
     await iterator.return?.();
   });

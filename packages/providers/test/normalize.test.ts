@@ -73,14 +73,17 @@ describe('polygon quote normalization', () => {
     expect(nsToIso(quote!.tsEvent)).toBe('2024-01-02T14:30:00.123000000Z');
   });
 
-  it('converts round lots to shares', () => {
-    expect(isQuote(quote!) && quote!.bidSz).toBe(300);
-    expect(isQuote(quote!) && quote!.askSz).toBe(200);
+  it('reports quote sizes in shares, which is what Massive has sent since 2025-11-03', () => {
+    // bs:3 means three shares, not three round lots. Multiplying by 100 here would overstate
+    // every quote size by 100x, which looks plausible in a log and shows up as bad fills.
+    expect(isQuote(quote!) && quote!.bidSz).toBe(3);
+    expect(isQuote(quote!) && quote!.askSz).toBe(2);
   });
 
-  it('keeps sizes as reported when the plan reports shares', () => {
-    const shares = normalizePolygonMessage(payloads[2], { quoteSizeUnits: 'shares' });
-    expect(isQuote(shares!) && shares!.bidSz).toBe(3);
+  it('multiplies by the round lot only when replaying pre-cutover flat files', () => {
+    const lots = normalizePolygonMessage(payloads[2], { quoteSizeUnits: 'lots' });
+    expect(isQuote(lots!) && lots!.bidSz).toBe(300);
+    expect(isQuote(lots!) && lots!.askSz).toBe(200);
   });
 
   it('maps venue codes to MICs', () => {
@@ -202,7 +205,7 @@ describe('snapshot normalization', () => {
     const body = parseJsonLossless(SNAPSHOT_BODY) as { tickers: unknown[] };
     const quote = normalizePolygonSnapshot(body.tickers[0]);
     expect(quote!.tsEvent).toBe(1704205800123456789n);
-    expect(quote!.bidSz).toBe(300);
+    expect(quote!.bidSz).toBe(3);
     expect(hasFlag(quote!.flags, CdmFlags.Snapshot)).toBe(true);
   });
 

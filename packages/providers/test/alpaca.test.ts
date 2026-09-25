@@ -50,6 +50,8 @@ describe('alpaca fixture replay', () => {
   });
 
   it('converts quote round lots to shares and keeps trade sizes as shares', () => {
+    // Alpaca still documents quote sizes as round lots. Massive moved to shares on 2025-11-03, so
+    // the two adapters deliberately disagree here; do not "fix" this to match Polygon's.
     const quote = normalizeAlpacaMessage(payloads[3]);
     expect(isQuote(quote!) && quote!.bidSz).toBe(300);
     const trade = normalizeAlpacaMessage(payloads[6]);

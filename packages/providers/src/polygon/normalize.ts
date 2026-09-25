@@ -15,13 +15,24 @@ import { polygonTradeFlags } from './conditions.js';
 
 const PROVIDER = 'polygon' as const;
 
-/** Polygon reports quote sizes in round lots and trade sizes in shares. */
+/**
+ * Massive (formerly Polygon) switched stocks quote sizes from round lots to shares on 2025-11-03,
+ * across the REST API, the websocket stream, and flat files. Trade sizes were always shares.
+ *
+ * So the default is 'shares' and no multiplier is applied. The 'lots' option exists for replaying
+ * flat files dated before the cutover, which were still in round lots while the historical
+ * regeneration ran. See docs/cdm-draft.md row 7.
+ */
 const LOT_SIZE = 100;
+const QUOTE_SIZE_CUTOVER = '2025-11-03';
 
 export interface PolygonNormalizeOptions {
   /** Maps a Polygon ticker to a FIGI. Returns UNRESOLVED_FIGI until Phase 3 symbology is wired. */
   readonly resolveFigi?: (symbol: string) => string;
-  /** Override if a future Polygon plan reports quote sizes in shares. */
+  /**
+   * Defaults to 'shares', which is what Massive has reported since 2025-11-03. Pass 'lots' only
+   * when replaying flat files from before that date.
+   */
   readonly quoteSizeUnits?: 'lots' | 'shares';
   /** Attach the original payload. On by default; the router turns it off for depth-heavy feeds. */
   readonly includeRaw?: boolean;
@@ -74,7 +85,7 @@ export function normalizePolygonMessage(
 
   const tsConduitRecv = nowNs();
   const resolveFigi = options.resolveFigi ?? (() => UNRESOLVED_FIGI);
-  const quoteMultiplier = (options.quoteSizeUnits ?? 'lots') === 'lots' ? LOT_SIZE : 1;
+  const quoteMultiplier = options.quoteSizeUnits === 'lots' ? LOT_SIZE : 1;
   const includeRaw = options.includeRaw ?? true;
   const raw = includeRaw ? { raw: payload } : {};
 
@@ -166,7 +177,7 @@ export function normalizePolygonSnapshot(
 
   const symbol = str(t['ticker'], 'ticker');
   const resolveFigi = options.resolveFigi ?? (() => UNRESOLVED_FIGI);
-  const quoteMultiplier = (options.quoteSizeUnits ?? 'lots') === 'lots' ? LOT_SIZE : 1;
+  const quoteMultiplier = options.quoteSizeUnits === 'lots' ? LOT_SIZE : 1;
 
   return {
     kind: 'quote',
