@@ -3,8 +3,8 @@ import {
   DOCUMENTED_ALPACA_VENUES,
   DOCUMENTED_POLYGON_VENUES,
   clearVenueMaps,
-  micFor,
-  registerVenueMap,
+  registerVenueLabels,
+  venueLabelFor,
   venueCode,
 } from '../src/venues.js';
 
@@ -24,26 +24,26 @@ describe('venueCode', () => {
   });
 });
 
-describe('micFor', () => {
+describe('venueLabelFor', () => {
   it('resolves nothing until a map is registered', () => {
-    expect(micFor('polygon', '62')).toBeUndefined();
+    expect(venueLabelFor('polygon', '62')).toBeUndefined();
   });
 
   it('resolves from a map the consumer supplied', () => {
-    registerVenueMap('polygon', { 62: 'FINR', 11: 'XBOS' });
-    expect(micFor('polygon', 62)).toBe('FINR');
-    expect(micFor('polygon', '11')).toBe('XBOS');
+    registerVenueLabels('polygon', { 62: 'FINR', 11: 'XBOS' });
+    expect(venueLabelFor('polygon', 62)).toBe('FINR');
+    expect(venueLabelFor('polygon', '11')).toBe('XBOS');
     // A code the map does not cover stays undefined.
-    expect(micFor('polygon', '999')).toBeUndefined();
+    expect(venueLabelFor('polygon', '999')).toBeUndefined();
     // And registering for one provider does not answer for another.
-    expect(micFor('alpaca', '62')).toBeUndefined();
+    expect(venueLabelFor('alpaca', '62')).toBeUndefined();
   });
 
   it('merges successive registrations instead of replacing', () => {
-    registerVenueMap('alpaca', { A: 'XASE' });
-    registerVenueMap('alpaca', { B: 'XBOS' });
-    expect(micFor('alpaca', 'A')).toBe('XASE');
-    expect(micFor('alpaca', 'B')).toBe('XBOS');
+    registerVenueLabels('alpaca', { A: 'XASE' });
+    registerVenueLabels('alpaca', { B: 'XBOS' });
+    expect(venueLabelFor('alpaca', 'A')).toBe('XASE');
+    expect(venueLabelFor('alpaca', 'B')).toBe('XBOS');
   });
 });
 

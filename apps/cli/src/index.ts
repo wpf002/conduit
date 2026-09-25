@@ -18,6 +18,7 @@ import {
   PrismaSymbologyStore,
   SymbologyResolver,
 } from '@conduit/symbology';
+import { loadAlpacaReference, loadPolygonReference } from '@conduit/providers';
 import { loadEnv, parseDuration } from './env.js';
 import { runDoctor } from './doctor.js';
 import { money, ms, statusLabel, table } from './format.js';
@@ -75,8 +76,9 @@ program
   .command('doctor')
   .description('Validate every configured key and report coverage, latency, and quota headroom')
   .option('--symbols <list>', 'comma-separated probe symbols', 'AAPL')
+  .option('--no-reference', 'skip loading vendor venue and condition tables')
   .option('--json', 'machine-readable output')
-  .action(async (opts: { symbols: string; json?: boolean }) => {
+  .action(async (opts: { symbols: string; reference: boolean; json?: boolean }) => {
     const env = loadEnv();
     const ledger = new UsageLedger({ store: new MemoryLedgerStore() });
     const adapters = env.adapters;
@@ -87,11 +89,30 @@ program
       return;
     }
 
+    // Neither vendor publishes its venue or condition tables, so Conduit ships none. doctor pulls
+    // them with the user's own key and registers them for the rest of the process.
+    const loaders: (() => Promise<{
+      provider: 'polygon' | 'alpaca' | 'databento' | 'tiingo';
+      venues: number;
+      conditions: number;
+      conditionsFlagged: number;
+    }>)[] = [];
+    if (opts.reference) {
+      const polygonKey = process.env['POLYGON_API_KEY'];
+      if (polygonKey) loaders.push(() => loadPolygonReference({ apiKey: polygonKey }));
+      const alpacaId = process.env['ALPACA_API_KEY_ID'];
+      const alpacaSecret = process.env['ALPACA_API_SECRET_KEY'];
+      if (alpacaId && alpacaSecret) {
+        loaders.push(() => loadAlpacaReference({ keyId: alpacaId, secret: alpacaSecret }));
+      }
+    }
+
     const report = await runDoctor({
       adapters,
       ledger,
       missing: env.missing,
       probeSymbols: opts.symbols.split(',').map((s) => s.trim()),
+      loadReference: loaders,
     });
 
     if (opts.json) {
@@ -116,6 +137,17 @@ program
         console.log(
           `  ${schema.padEnd(10)} ${providers.length > 0 ? providers.join(', ') : pc.yellow('none')}`,
         );
+      }
+      if (report.reference.length > 0) {
+        console.log();
+        console.log(pc.bold('reference tables'));
+        for (const load of report.reference) {
+          console.log(
+            load.error
+              ? `  ${load.provider.padEnd(10)} ${pc.yellow('failed')} ${load.error}`
+              : `  ${load.provider.padEnd(10)} ${load.venues} venues, ${load.conditions} conditions (${load.conditionsFlagged} mapped to CDM flags)`,
+          );
+        }
       }
       if (report.missing.length > 0) {
         console.log();

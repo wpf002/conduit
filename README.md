@@ -118,7 +118,7 @@ Ledger data is written to the user's local Postgres and never transmitted.
 
 | Phase | State |
 |---|---|
-| 0 — falsify before building | licensing emails drafted, not sent; CDM disagreements recorded |
+| 0 — falsify before building | gate 1 closed on published terms (emails not being sent); CDM rows 1, 2, 5, 7 resolved |
 | 1 — core + Polygon | done |
 | 2 — Alpaca, Databento, failover router | done; Databento is replay-only |
 | 3 — symbology | done |
@@ -166,6 +166,32 @@ The router does three things, in this order:
 
 It is explicitly not cost minimization. Cost routing only paid off under subscription pooling, and
 pooling is the part the licences prohibit.
+
+## Reference data
+
+Neither Massive nor Alpaca publishes its venue or condition-code table outside an authenticated
+endpoint, so Conduit ships **neither**. An earlier version of this repo shipped hand-written ones;
+they were wrong, and a wrong venue or condition flag is worse than an absent one because a strategy
+filtering on it acts silently.
+
+`conduit doctor` pulls both tables with your own key and registers them:
+
+```bash
+conduit doctor                  # loads venue + condition tables, reports the counts
+conduit doctor --no-reference   # skip it
+```
+
+In code:
+
+```ts
+import { loadPolygonReference, venueLabelFor } from '@conduit/providers';
+
+await loadPolygonReference({ apiKey });
+venueLabelFor('polygon', 62); // 'FINR', from Massive's own table
+```
+
+Until a table is registered, `venue` carries the vendor's own code verbatim and condition flags are
+empty apart from odd-lot, which is derived from size and marked `Derived`.
 
 ## Symbology
 

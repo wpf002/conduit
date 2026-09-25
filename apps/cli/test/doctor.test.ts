@@ -251,3 +251,36 @@ describe('parseDuration', () => {
     }
   });
 });
+
+describe('reference table loading', () => {
+  it('reports what each vendor table returned', async () => {
+    const report = await runDoctor({
+      adapters: [new ProbeAdapter('polygon')],
+      loadReference: [
+        async () => ({ provider: 'polygon', venues: 42, conditions: 80, conditionsFlagged: 11 }),
+      ],
+    });
+    expect(report.reference).toEqual([
+      { provider: 'polygon', venues: 42, conditions: 80, conditionsFlagged: 11, error: undefined },
+    ]);
+  });
+
+  it('reports a failed load without failing the run', async () => {
+    const report = await runDoctor({
+      adapters: [new ProbeAdapter('polygon')],
+      loadReference: [
+        async () => {
+          throw new AuthError('polygon rejected the key on a reference request');
+        },
+      ],
+    });
+    expect(report.reference[0]!.error).toMatch(/rejected the key/);
+    // The key itself probed fine, so the run is still ok.
+    expect(report.ok).toBe(true);
+  });
+
+  it('loads nothing when no loaders are given', async () => {
+    const report = await runDoctor({ adapters: [new ProbeAdapter('polygon')] });
+    expect(report.reference).toEqual([]);
+  });
+});

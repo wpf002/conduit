@@ -26,8 +26,18 @@ export interface DoctorCheck {
   readonly headroom: Headroom | undefined;
 }
 
+export interface ReferenceLoad {
+  readonly provider: ProviderId;
+  readonly venues: number;
+  readonly conditions: number;
+  readonly conditionsFlagged: number;
+  readonly error: string | undefined;
+}
+
 export interface DoctorReport {
   readonly checks: readonly DoctorCheck[];
+  /** Venue and condition tables pulled from each vendor's reference endpoint. */
+  readonly reference: readonly ReferenceLoad[];
   /** Which providers can serve each schema for equities, after the live probe. */
   readonly coverage: Readonly<Record<string, readonly ProviderId[]>>;
   readonly missing: readonly ProviderId[];
@@ -45,6 +55,17 @@ export interface DoctorOptions {
    * probe has a key without the entitlement, which is a different problem from a revoked key.
    */
   readonly entitlementProbes?: Readonly<Partial<Record<AssetClass, readonly string[]>>>;
+  /**
+   * Loads each vendor's venue and condition tables and registers them, so venue labels and
+   * condition flags come from the vendor rather than from a hand-written table. Costs one or two
+   * REST calls per provider.
+   */
+  readonly loadReference?: readonly (() => Promise<{
+    provider: ProviderId;
+    venues: number;
+    conditions: number;
+    conditionsFlagged: number;
+  }>)[];
 }
 
 const DEFAULT_PROBE = ['AAPL'];
@@ -117,6 +138,23 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorReport> {
     });
   }
 
+  const reference: ReferenceLoad[] = [];
+  for (const load of options.loadReference ?? []) {
+    try {
+      const result = await load();
+      reference.push({ ...result, error: undefined });
+    } catch (error) {
+      // A reference table that will not load is worth reporting, not worth failing over.
+      reference.push({
+        provider: 'polygon',
+        venues: 0,
+        conditions: 0,
+        conditionsFlagged: 0,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   const coverage: Record<string, ProviderId[]> = {};
   for (const schema of SCHEMAS) {
     coverage[schema] = options.adapters
@@ -130,6 +168,7 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorReport> {
 
   return {
     checks,
+    reference,
     coverage,
     missing: options.missing ?? [],
     ok: checks.length > 0 && checks.every((c) => c.status === 'ok' || c.status === 'near_ceiling'),

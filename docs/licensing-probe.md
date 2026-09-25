@@ -1,7 +1,11 @@
 # Phase 0 gate 1 — licensing probe
 
-Status: **drafted, not sent.** Send both, record replies inline under each, then update
-[Resolution](#resolution).
+Status: **closed on the published terms. The emails are not being sent** (operator decision,
+2026-09-25). The drafts below are kept for reference only; nothing here is a pending action.
+
+What that costs: the exchange redistribution pricing stays unknown, so the hosted design with cost
+routing cannot be priced and therefore cannot be chosen. BYO-key stands as the architecture by
+default rather than by comparison. If that question ever matters, the drafts are ready.
 
 ## Why this gate exists
 
@@ -11,7 +15,7 @@ strictest terms before any adapter code is worth writing. The second question is
 important one: if a redistribution agreement is cheap, the hosted design with cost routing beats
 this one outright and the roadmap should be reconsidered rather than continued.
 
-## Email 1 — Polygon.io business development
+## Email 1 — Polygon.io business development — not sent
 
 > **To:** bd@polygon.io
 > **Subject:** Terms question: client library where each user supplies their own API key
@@ -39,9 +43,9 @@ this one outright and the roadmap should be reconsidered rather than continued.
 > Thanks,
 > Will Foti
 
-**Reply:** _(paste here)_
+**Reply:** n/a — not sent.
 
-## Email 2 — Databento business development
+## Email 2 — Databento business development — not sent
 
 > **To:** sales@databento.com
 > **Subject:** Terms question: BYO-key client library, no data through our infrastructure
@@ -63,7 +67,7 @@ this one outright and the roadmap should be reconsidered rather than continued.
 > Thanks,
 > Will Foti
 
-**Reply:** _(paste here)_
+**Reply:** n/a — not sent.
 
 ## What the published terms already answer
 
@@ -100,7 +104,10 @@ sitting underneath. That is quote-only and involves a conversation with each exc
 | End-user (Edge User) redistribution permitted by the vendor? | yes, §6.1(e) | yes, with an exchange ILA |
 | Exchange redistribution licence cost | **still unknown — quote only** | **still unknown — quote only** |
 
-**Decision rule, revised:** the emails are still worth sending, but the question to ask is no longer
-"is BYO-key allowed". It is: *which Third-Party Agreements would a hosted Conduit need as a
-redistributor, and what do those exchanges charge?* If that number comes back affordable, stop and
-reconsider the hosted design with cost routing. Until then the BYO-key architecture stands.
+**Decision, 2026-09-25.** The gate is closed on the published terms. BYO-key is within terms for both
+vendors, which is what Phases 1–4 depend on, and that part needed no reply.
+
+The unanswered half — what exchange redistribution licences cost — stays unanswered, because the
+emails are not being sent. The consequence is recorded rather than papered over: the hosted design
+with cost routing is not ruled out on legal grounds, it is simply unpriced, so it cannot be compared
+and will not be built. Anyone reopening that question starts by sending Email 1 and Email 2.

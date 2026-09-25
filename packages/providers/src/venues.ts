@@ -12,8 +12,8 @@ import type { ProviderId } from '@conduit/core';
  *
  * Consumers that need MICs register a map they trust, from the vendor's reference endpoint:
  *
- *   registerVenueMap('polygon', await fetchPolygonExchanges(apiKey));
- *   micFor('polygon', '62');  // -> whatever that map says
+ *   await loadPolygonReference({ apiKey });   // fetches and registers the real table
+ *   venueLabelFor('polygon', '62');          // -> whatever the vendor's table says
  */
 const maps = new Map<ProviderId, Map<string, string>>();
 
@@ -30,17 +30,25 @@ export const DOCUMENTED_ALPACA_VENUES: Readonly<Record<string, string>> = {
   V: 'IEX',
 };
 
-export function registerVenueMap(
+export function registerVenueLabels(
   provider: ProviderId,
   entries: Readonly<Record<string, string>>,
 ): void {
   const map = maps.get(provider) ?? new Map<string, string>();
-  for (const [code, mic] of Object.entries(entries)) map.set(String(code), mic);
+  for (const [code, label] of Object.entries(entries)) map.set(String(code), label);
   maps.set(provider, map);
 }
 
-/** Whatever the registered map says for this code, or undefined. Never a guess. */
-export function micFor(provider: ProviderId, code: string | number | undefined): string | undefined {
+/**
+ * Whatever the registered table says for this code, or undefined. Never a guess.
+ *
+ * The label is a MIC when it came from Massive and an exchange name when it came from Alpaca, which
+ * is what each vendor's reference endpoint returns — hence "label" rather than "mic".
+ */
+export function venueLabelFor(
+  provider: ProviderId,
+  code: string | number | undefined,
+): string | undefined {
   if (code === undefined) return undefined;
   return maps.get(provider)?.get(String(code));
 }
