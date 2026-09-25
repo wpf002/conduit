@@ -98,12 +98,16 @@ The things that surface after a week of uptime rather than in a test.
 |---|---|
 | **Sequence gaps are captured and ignored.** `seq` is on every Polygon and Databento message and nothing reads it. | A dropped packet is invisible. Emit a gap control message so the consumer can decide whether to trust the window. |
 | **Backpressure is silent.** `AsyncQueue` drops the oldest past `highWaterMark` and only increments a counter nobody reads. | A slow consumer silently loses data. It needs a control message, not a field. |
-| **Market-closed hours.** `staleAfterMs` marks a provider degraded when no message arrives, and no message arrives overnight or at the weekend. | The router will thrash between healthy providers every night. Needs a session calendar or a "no data expected" state. |
+| ~~**Market-closed hours.**~~ | **Done.** Staleness now needs corroboration: the router snapshots a standby and only switches if that standby has current data. No calendar needed, and it handles holidays, half-days and venue outages for free. |
 | **No logging interface.** The library is silent by design, with `onEvent` as the only hook. | Diagnosing a live incident means adding print statements to a dependency. |
 | **`conduit doctor` cannot see a stream.** It probes REST only. | The failure mode most likely in production — a socket that connects, authenticates, and then goes quiet — is the one doctor cannot detect. |
 
 **Acceptance:** a soak run across a real session boundary (close, overnight, open) with zero spurious
 failovers, plus a gap-injection test that produces exactly one gap message.
+
+The session-boundary half is covered by tests rather than a live soak: five cases in
+`packages/client/test/failover.test.ts` under "market-closed hours". A real soak still wants doing
+once a key exists.
 
 *Effort: 2–3 weeks. The market-closed item is the one that will bite first.*
 

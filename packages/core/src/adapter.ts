@@ -1,7 +1,12 @@
 import type { CdmMessage, MarketMessage, QuoteTick } from './cdm.js';
 import type { AssetClass, ProviderId, Schema } from './ids.js';
 
-export type HealthState = 'healthy' | 'degraded' | 'down';
+/**
+ * 'unknown' means the adapter has not been asked to do anything yet. It is distinct from 'down',
+ * which is a claim that something was tried and failed — reporting an unused provider as down makes
+ * the router skip it and makes `conduit doctor` lie.
+ */
+export type HealthState = 'unknown' | 'healthy' | 'degraded' | 'down';
 
 export interface HealthSnapshot {
   readonly provider: ProviderId;

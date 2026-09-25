@@ -135,9 +135,9 @@ describe('phase 2 acceptance: revoked key mid-stream', () => {
 });
 
 describe('health-based failover', () => {
-  it('switches when the active provider goes stale', async () => {
-    const polygon = new FakeAdapter('polygon', { staleAfterMs: 100 });
-    const alpaca = new FakeAdapter('alpaca');
+  it('switches when the active provider goes stale and a standby has current data', async () => {
+    const polygon = new FakeAdapter('polygon', { staleAfterMs: 100, snapshotAgeMs: 600_000 });
+    const alpaca = new FakeAdapter('alpaca', { snapshotAgeMs: 0 });
     const client = new ConduitClient({ providers: [polygon, alpaca], failover: FAST });
     const sub = await client.subscribe({ symbols: ['AAPL'], schema: 'quote_l1' });
     const sink = collect(sub);
@@ -523,5 +523,172 @@ describe('phase 5 metric 2: failover audit', () => {
     }
     expect(audit.report().incidents).toHaveLength(2);
     expect(audit.report().byProvider).toEqual({ alpaca: 10 });
+  });
+});
+
+describe('market-closed hours', () => {
+  it('does not switch when every provider is equally silent', async () => {
+    // A closed market: the last print stays the last print, so a snapshot returns old data too.
+    const polygon = new FakeAdapter('polygon', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    const alpaca = new FakeAdapter('alpaca', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    const events: RouterEvent[] = [];
+    const client = new ConduitClient({
+      providers: [polygon, alpaca],
+      failover: { ...FAST, staleAfterMs: 80 },
+      onEvent: (e) => events.push(e),
+    });
+    const sub = await client.subscribe({ symbols: ['AAPL'], schema: 'quote_l1' });
+    const sink = collect(sub);
+
+    polygon.emitQuote('AAPL', T0);
+    await waitFor(() => sink.messages.length === 1);
+
+    // Several watchdog ticks past staleAfterMs. An absolute rule would switch on every one.
+    await new Promise((r) => setTimeout(r, 400));
+    expect(sub.switchCount).toBe(0);
+    expect(sub.activeProvider).toBe('polygon');
+
+    // And it says why, once, rather than silently doing nothing.
+    const quiet = events.filter((e) => e.reason.includes('every provider is silent'));
+    expect(quiet).toHaveLength(1);
+
+    await sub.close();
+    await client.close();
+    await sink.done;
+  });
+
+  it('switches when a standby proves the market is trading', async () => {
+    const polygon = new FakeAdapter('polygon', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    // Alpaca's snapshot is current, so something is printing and polygon's socket is the problem.
+    const alpaca = new FakeAdapter('alpaca', { staleAfterMs: 80, snapshotAgeMs: 0 });
+    const client = new ConduitClient({
+      providers: [polygon, alpaca],
+      failover: { ...FAST, staleAfterMs: 80 },
+    });
+    const sub = await client.subscribe({ symbols: ['AAPL'], schema: 'quote_l1' });
+    const sink = collect(sub);
+
+    polygon.emitQuote('AAPL', T0);
+    await waitFor(() => sink.messages.length === 1);
+    await waitFor(() => sub.activeProvider === 'alpaca', 2_000);
+    const control = sink.messages.find(isControl) as ControlMessage;
+    expect(control.reason).toMatch(/has data \d+ms old/);
+    expect(alpaca.snapshotCalls).toBeGreaterThan(0);
+
+    await sub.close();
+    await client.close();
+    await sink.done;
+  });
+
+  it('probes once per backoff, not once per watchdog tick', async () => {
+    const polygon = new FakeAdapter('polygon', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    const alpaca = new FakeAdapter('alpaca', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    const client = new ConduitClient({
+      providers: [polygon, alpaca],
+      // Watchdog every 20ms, probe backoff max(20, 80) = 80ms.
+      failover: { ...FAST, probeIntervalMs: 20, staleAfterMs: 80 },
+    });
+    const sub = await client.subscribe({ symbols: ['AAPL'], schema: 'quote_l1' });
+    const sink = collect(sub);
+
+    polygon.emitQuote('AAPL', T0);
+    await waitFor(() => sink.messages.length === 1);
+    await new Promise((r) => setTimeout(r, 500));
+
+    // ~20 ticks of staleness. Probing each one would be 20 wasted requests.
+    expect(alpaca.snapshotCalls).toBeLessThan(10);
+    expect(sub.switchCount).toBe(0);
+
+    await sub.close();
+    await client.close();
+    await sink.done;
+  });
+
+  it('falls back to switching when no standby can be probed', async () => {
+    const polygon = new FakeAdapter('polygon', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    // A replay-only provider cannot answer a snapshot, so there is no evidence either way.
+    const databento = new FakeAdapter('databento', {
+      staleAfterMs: 80,
+      snapshotError: new CoverageError('no snapshot endpoint', { provider: 'databento' }),
+    });
+    const client = new ConduitClient({
+      providers: [polygon, databento],
+      failover: { ...FAST, staleAfterMs: 80 },
+    });
+    const sub = await client.subscribe({ symbols: ['AAPL'], schema: 'quote_l1' });
+    const sink = collect(sub);
+
+    polygon.emitQuote('AAPL', T0);
+    await waitFor(() => sink.messages.length === 1);
+    // Doing nothing forever is worse than one switch.
+    await waitFor(() => sub.activeProvider === 'databento', 2_000);
+    expect((sink.messages.find(isControl) as ControlMessage).reason).toMatch(
+      /no standby could be probed/,
+    );
+
+    await sub.close();
+    await client.close();
+    await sink.done;
+  });
+
+  it('still fails over on consecutive failures during a quiet period', async () => {
+    const polygon = new FakeAdapter('polygon', {
+      staleAfterMs: 80,
+      maxConsecutiveFailures: 2,
+      snapshotAgeMs: 600_000,
+    });
+    const alpaca = new FakeAdapter('alpaca', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    const client = new ConduitClient({
+      providers: [polygon, alpaca],
+      failover: { ...FAST, staleAfterMs: 80 },
+    });
+    const sub = await client.subscribe({ symbols: ['AAPL'], schema: 'quote_l1' });
+    const sink = collect(sub);
+
+    polygon.emitQuote('AAPL', T0);
+    await waitFor(() => sink.messages.length === 1);
+    await new Promise((r) => setTimeout(r, 200));
+    expect(sub.switchCount).toBe(0);
+
+    // A dead socket is evidence about polygon specifically, not about the market.
+    polygon.recordFailures(2);
+    await waitFor(() => sub.activeProvider === 'alpaca', 2_000);
+    expect((sink.messages.find(isControl) as ControlMessage).reason).toContain(
+      'consecutive failures',
+    );
+
+    await sub.close();
+    await client.close();
+    await sink.done;
+  });
+
+  it('resumes normal staleness handling when messages come back', async () => {
+    const polygon = new FakeAdapter('polygon', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    const alpaca = new FakeAdapter('alpaca', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    const events: RouterEvent[] = [];
+    const client = new ConduitClient({
+      providers: [polygon, alpaca],
+      failover: { ...FAST, staleAfterMs: 80 },
+      onEvent: (e) => events.push(e),
+    });
+    const sub = await client.subscribe({ symbols: ['AAPL'], schema: 'quote_l1' });
+    const sink = collect(sub);
+
+    polygon.emitQuote('AAPL', T0);
+    await waitFor(() => sink.messages.length === 1);
+    await new Promise((r) => setTimeout(r, 200));
+    expect(events.filter((e) => e.reason.includes('every provider is silent'))).toHaveLength(1);
+
+    // The open bell: polygon prints again, then goes quiet again.
+    polygon.emitQuote('AAPL', T0 + 1_000_000_000n);
+    await waitFor(() => sink.messages.length === 2);
+    await new Promise((r) => setTimeout(r, 200));
+    // A second quiet period is reported, not suppressed forever by the first.
+    expect(events.filter((e) => e.reason.includes('every provider is silent'))).toHaveLength(2);
+    expect(sub.switchCount).toBe(0);
+
+    await sub.close();
+    await client.close();
+    await sink.done;
   });
 });

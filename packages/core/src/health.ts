@@ -20,6 +20,7 @@ export class HealthTracker {
   #staleAfterMs: number;
   #maxConsecutiveFailures: number;
   #connected = false;
+  #everConnected = false;
   #consecutiveFailures = 0;
   #reconnectCount = 0;
   #messagesReceived = 0;
@@ -34,6 +35,7 @@ export class HealthTracker {
 
   recordConnected(): void {
     this.#connected = true;
+    this.#everConnected = true;
     this.#consecutiveFailures = 0;
     this.#lastError = undefined;
   }
@@ -72,6 +74,10 @@ export class HealthTracker {
   }
 
   #state(): HealthState {
+    // Nothing has been attempted, so nothing is known. Not the same as down.
+    if (!this.#everConnected && this.#consecutiveFailures === 0 && this.#messagesReceived === 0) {
+      return 'unknown';
+    }
     if (this.#consecutiveFailures >= this.#maxConsecutiveFailures) return 'down';
     if (!this.#connected) return this.#consecutiveFailures > 0 ? 'degraded' : 'down';
     if (this.isStale) return 'degraded';
