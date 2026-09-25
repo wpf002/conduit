@@ -1,5 +1,6 @@
 import {
   SCHEMAS,
+  ageMs,
   isConduitError,
   type AssetClass,
   type ProviderAdapter,
@@ -15,7 +16,9 @@ export type DoctorStatus =
   | 'rate_limited'
   | 'near_ceiling'
   | 'unreachable'
-  | 'not_supported';
+  | 'not_supported'
+  /** Connected and authenticated, and no data arrived while the REST snapshot was current. */
+  | 'silent';
 
 export interface DoctorCheck {
   readonly provider: ProviderId;
@@ -24,6 +27,10 @@ export interface DoctorCheck {
   readonly latencyMs: number | undefined;
   readonly capabilities: readonly Schema[];
   readonly headroom: Headroom | undefined;
+  /** Messages received during the stream probe, or undefined if it was not run. */
+  readonly streamed: number | undefined;
+  /** How old the REST snapshot's data was, which says whether silence was expected. */
+  readonly snapshotAgeMs: number | undefined;
 }
 
 export interface ReferenceLoad {
@@ -60,6 +67,12 @@ export interface DoctorOptions {
    * condition flags come from the vendor rather than from a hand-written table. Costs one or two
    * REST calls per provider.
    */
+  /**
+   * Also open a stream for this long. Without it, doctor probes REST only — and the failure most
+   * likely in production is a socket that connects, authenticates and then goes quiet, which REST
+   * cannot see.
+   */
+  readonly streamProbeMs?: number;
   readonly loadReference?: readonly (() => Promise<{
     provider: ProviderId;
     venues: number;
@@ -95,12 +108,17 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorReport> {
     let status: DoctorStatus;
     let detail: string;
     let latencyMs: number | undefined;
+    let snapshotAgeMs: number | undefined;
 
     try {
       const quotes = await adapter.snapshot({ symbols: probeSymbols, assetClass: 'equity' });
       latencyMs = Date.now() - startedAt;
       status = 'ok';
       detail = `${quotes.length} quote${quotes.length === 1 ? '' : 's'} for ${probeSymbols.join(', ')}`;
+      for (const quote of quotes) {
+        const age = ageMs(quote.tsEvent);
+        if (snapshotAgeMs === undefined || age < snapshotAgeMs) snapshotAgeMs = age;
+      }
     } catch (error) {
       latencyMs = Date.now() - startedAt;
       ({ status, detail } = classify(error));
@@ -122,6 +140,30 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorReport> {
       }
     }
 
+    /*
+     * The failure REST cannot see: a socket that connects, authenticates, and then sends nothing.
+     *
+     * Silence on its own proves nothing — outside market hours every feed is silent. So it is only a
+     * problem when the REST snapshot came back with current data, which means something is trading.
+     * Same corroboration the router uses for staleness.
+     */
+    let streamed: number | undefined;
+    if (status === 'ok' && options.streamProbeMs && options.streamProbeMs > 0) {
+      const schema = pickStreamSchema(adapter);
+      if (schema) {
+        streamed = await countStreamed(adapter, schema, probeSymbols, options.streamProbeMs);
+        const marketLooksOpen = snapshotAgeMs !== undefined && snapshotAgeMs < options.streamProbeMs * 10;
+        if (streamed === 0 && marketLooksOpen) {
+          status = 'silent';
+          detail = `connected and authenticated, but no ${schema} messages in ${options.streamProbeMs}ms while REST data was ${snapshotAgeMs}ms old`;
+        } else if (streamed === 0) {
+          detail += `; stream silent for ${options.streamProbeMs}ms, and REST data is ${snapshotAgeMs ?? 'unknown'}ms old, so the market is probably closed`;
+        } else {
+          detail += `; ${streamed} ${schema} message${streamed === 1 ? '' : 's'} streamed`;
+        }
+      }
+    }
+
     // A working key that is nearly out of window budget is the third thing worth knowing.
     if (status === 'ok' && headroom?.nearCeiling) {
       status = 'near_ceiling';
@@ -135,6 +177,8 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorReport> {
       latencyMs,
       capabilities,
       ...(headroom ? { headroom } : { headroom: undefined }),
+      streamed,
+      snapshotAgeMs,
     });
   }
 
@@ -173,6 +217,39 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorReport> {
     missing: options.missing ?? [],
     ok: checks.length > 0 && checks.every((c) => c.status === 'ok' || c.status === 'near_ceiling'),
   };
+}
+
+/** The cheapest live schema this adapter can stream: quotes if it has them, else whatever it has. */
+function pickStreamSchema(adapter: ProviderAdapter): Schema | undefined {
+  for (const preferred of ['quote_l1', 'trades', 'bars_1m'] as const) {
+    if (adapter.capabilities.has(preferred)) return preferred;
+  }
+  return [...adapter.capabilities][0];
+}
+
+/** Opens a stream for a fixed window and counts what arrives. Never throws. */
+async function countStreamed(
+  adapter: ProviderAdapter,
+  schema: Schema,
+  symbols: readonly string[],
+  durationMs: number,
+): Promise<number> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), durationMs);
+  let count = 0;
+  try {
+    for await (const message of adapter.stream({ symbols, schema, signal: controller.signal })) {
+      if (message.kind !== 'control') count += 1;
+      // A single message answers the question; no need to hold the socket for the full window.
+      if (count >= 1) break;
+    }
+  } catch {
+    // A stream that refuses to open is already covered by the snapshot probe's classification.
+  } finally {
+    clearTimeout(timer);
+    controller.abort();
+  }
+  return count;
 }
 
 function classify(error: unknown): { status: DoctorStatus; detail: string } {

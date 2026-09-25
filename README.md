@@ -117,8 +117,32 @@ outside:
 | `auth failed` | the key is dead; the provider is dropped from coverage |
 | `no entitlement` | the key works for equities and was refused for options or futures |
 | `near ceiling` | the key works and is close to its window limit |
+| `silent` | the socket connected and authenticated, then sent nothing while REST data was current |
+
+`silent` is the one REST alone cannot find, and it is the likeliest production failure: a socket that
+connects, authenticates and then goes quiet. Silence on its own proves nothing — outside market hours
+every feed is silent — so doctor only calls it a fault when the REST snapshot came back with current
+data, meaning something is trading. `--stream-ms 0` skips it.
 
 Every command takes `--json`.
+
+## Diagnostics
+
+The library is silent unless given a logger. It is a library, not an application, and writing to
+somebody else's stdout uninvited is rude — but being silent meant diagnosing a live incident needed
+print statements added to a dependency.
+
+```ts
+import { consoleLogger } from '@conduit/core';
+
+polygon({ apiKey, logger: consoleLogger({ level: 'debug' }), logLevel: 'debug' });
+
+// Or adapt any logger in a line:
+polygon({ apiKey, logger: (r) => pino[r.level]({ ...r.fields, provider: r.provider }, r.msg) });
+```
+
+Every record passes through credential redaction and cannot throw into the data path, so a logger
+that misbehaves — or a message that happens to contain a key — breaks nothing and leaks nothing.
 
 ## Usage accounting
 

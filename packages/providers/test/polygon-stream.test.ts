@@ -477,3 +477,66 @@ describe('backpressure', () => {
     await iterator.return?.();
   });
 });
+
+describe('diagnostics', () => {
+  it('logs the socket lifecycle and never the key', async () => {
+    fake = await startFakePolygon();
+    const records: { level: string; msg: string; fields?: Record<string, unknown> }[] = [];
+    adapter = connect({ logger: (r) => records.push(r), logLevel: 'debug' });
+    const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
+      Symbol.asyncIterator
+    ]();
+    await waitFor(() => fake!.subscribeFrames.length > 0);
+
+    const messages = records.map((r) => r.msg);
+    expect(messages).toContain('socket open');
+    expect(messages).toContain('authenticated');
+    expect(messages).toContain('subscribing');
+    expect(JSON.stringify(records)).not.toContain('test-key-01234567890');
+    await iterator.return?.();
+  });
+
+  it('logs a reconnect with the attempt and delay', async () => {
+    fake = await startFakePolygon();
+    const records: { level: string; msg: string; fields?: Record<string, unknown> }[] = [];
+    adapter = connect({ logger: (r) => records.push(r) });
+    const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
+      Symbol.asyncIterator
+    ]();
+    await waitFor(() => fake!.subscribeFrames.length > 0);
+
+    fake.killActiveConnection();
+    await waitFor(() => records.some((r) => r.msg === 'reconnecting'), 3_000);
+    const reconnect = records.find((r) => r.msg === 'reconnecting')!;
+    expect(reconnect.level).toBe('warn');
+    expect(reconnect.fields).toMatchObject({ attempt: 1 });
+    await iterator.return?.();
+  });
+
+  it('logs a revoked key as fatal', async () => {
+    fake = await startFakePolygon();
+    fake.authMode = 'failed';
+    const records: { level: string; msg: string }[] = [];
+    adapter = connect({ logger: (r) => records.push(r) });
+    try {
+      for await (const _ of adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })) {
+        /* unreachable */
+      }
+    } catch {
+      /* expected */
+    }
+    expect(records.find((r) => r.msg === 'fatal, not retrying')?.level).toBe('error');
+  });
+
+  it('is silent when no logger is configured', async () => {
+    fake = await startFakePolygon();
+    adapter = connect();
+    const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
+      Symbol.asyncIterator
+    ]();
+    await waitFor(() => fake!.subscribeFrames.length > 0);
+    // Nothing to assert but the absence of output; the point is that a library does not write to
+    // somebody else's stdout uninvited.
+    await iterator.return?.();
+  });
+});

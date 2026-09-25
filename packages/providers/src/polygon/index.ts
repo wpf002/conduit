@@ -8,6 +8,7 @@ import {
   UNRESOLVED_FIGI,
   nowNs,
   redact,
+  createLogger,
   registerSecret,
   type AssetClass,
   type BackoffOptions,
@@ -19,6 +20,7 @@ import {
   type Schema,
   type SnapshotRequest,
   type StreamRequest,
+  type Logger,
   type UsageHooks,
 } from '@conduit/core';
 import { ConsumerSet } from '../fanout.js';
@@ -64,6 +66,9 @@ export interface PolygonOptions {
    * filtered subscription every message looks like a gap. See ../sequence.ts before enabling.
    */
   readonly sequenceScope?: SequenceScope;
+  /** Diagnostics. Without one the adapter is silent. */
+  readonly logger?: Logger;
+  readonly logLevel?: 'debug' | 'info' | 'warn' | 'error';
   /** Test seam. Production code never passes this. */
   readonly socketFactory?: ConstructorParameters<typeof ReconnectingSocket>[1];
 }
@@ -79,6 +84,7 @@ class PolygonAdapter implements ProviderAdapter {
   #socket: ReconnectingSocket | undefined;
   #authenticated = false;
   #closed = false;
+  #log: Logger;
   #sequence: SequenceTracker;
 
   constructor(options: PolygonOptions) {
@@ -87,6 +93,9 @@ class PolygonAdapter implements ProviderAdapter {
     }
     registerSecret(options.apiKey);
     this.#options = options;
+    this.#log = createLogger(options.logger, {
+      ...(options.logLevel ? { level: options.logLevel } : {}),
+    });
     this.#health = new HealthTracker({
       provider: PROVIDER,
       staleAfterMs: options.staleAfterMs ?? 30_000,
@@ -296,6 +305,7 @@ class PolygonAdapter implements ProviderAdapter {
           ctx.send(JSON.stringify({ action: 'auth', params: this.#options.apiKey }));
         },
         onText: (data) => this.#onText(data),
+        logger: this.#log,
         onFatal: (error) => {
           // A revoked key cannot be retried. Consumers must see it, not a silent stall.
           this.#consumers.failAll(error);
@@ -320,6 +330,13 @@ class PolygonAdapter implements ProviderAdapter {
 
   #sendSubscribe(schema: Schema, symbols: readonly string[]): void {
     if (symbols.length === 0) return;
+    this.#log({
+      level: 'debug',
+      msg: 'subscribing',
+      provider: PROVIDER,
+      schema,
+      fields: { count: symbols.length },
+    });
     this.#reportUsage('ws_subscribe', symbols.length, schema);
     this.#socket?.send(
       JSON.stringify({ action: 'subscribe', params: this.#channelsFor(schema, symbols) }),
@@ -398,6 +415,7 @@ class PolygonAdapter implements ProviderAdapter {
 
     switch (status) {
       case 'auth_success': {
+        this.#log({ level: 'info', msg: 'authenticated', provider: PROVIDER });
         this.#authenticated = true;
         // Numbering may restart on a new connection; a stale baseline would invent a gap.
         this.#sequence.reset();
