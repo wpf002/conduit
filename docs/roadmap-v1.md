@@ -22,9 +22,22 @@ Unchanged from the build roadmap, and worth restating because scope creep here i
 
 ---
 
-## M1 — First contact
+## M1 — Conformance against primary sources
 
-**The blocking milestone. Nothing after this is trustworthy until it is done.**
+**Status: largely done without a key. See [conformance.md](conformance.md).**
+
+The original form of this milestone required a live provider and blocked everything behind it. That
+was wrong: most of what live testing gives you is knowledge of the wire format, and the vendors
+publish that in their own open-source SDKs. Reading their encoders found two bugs that no amount of
+documentation reading had — Databento's JSON has two shapes per numeric field, and Alpaca's stream
+is msgpack unless you ask otherwise.
+
+What remains genuinely key-gated is narrow, listed in
+[conformance.md](conformance.md#what-this-cannot-give-you), and none of it blocks M2 or M3: auth,
+reconnect against a real server, Databento's rate limits, the shape of a real entitlement error, and
+sustained behaviour over a session.
+
+### The original plan, for whenever a key does exist
 
 Not one line of this library has spoken to a real provider. The adapters, the normalizers, the error
 taxonomy and the reference loaders were all built from published docs, and three separate audits
@@ -46,7 +59,7 @@ replay of the 24h capture through the CDM invariants with zero failures.
 
 **Expect this to break things.** Budget for finding several wrong field shapes rather than none.
 
-*Effort: days. Cost: $0.*
+*Effort: an afternoon, whenever a key appears. Cost: $0 on Alpaca's Basic plan.*
 
 ---
 
@@ -132,16 +145,17 @@ seen this repo.
 ## Sequencing
 
 ```
-M1 ──► M2 ──► M3 ──► M4 ──► M5
- │                    │       │
- │                    │       └── skip if internal
- │                    └────────── go/no-go
- └── do this first; it may invalidate parts of M2 and M3
+M1' ──► M2 ──► M3 ──► M4 ──► M5
+ │              │      │       │
+ │              │      │       └── skip if internal
+ │              │      └───────── go/no-go
+ │              └──────────────── does not need a key
+ └── done from vendor SDK source; the key-gated residual is small and parallel
 ```
 
-M1 before anything. It is days of work, costs nothing, and its findings change what M2 and M3 should
-contain. Writing more adapters before the first one has ever run is how you get four adapters wrong
-in the same way.
+M1 is no longer a gate. Its key-gated residual runs in parallel with M2 and M3 whenever a key
+appears, and neither of those needs one. The principle that made M1 first still holds though: read
+the vendor's own code before writing another adapter, or you get four adapters wrong the same way.
 
 ## Known unknowns
 
