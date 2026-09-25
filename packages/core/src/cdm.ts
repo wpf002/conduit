@@ -30,7 +30,11 @@ export interface QuoteTick extends CdmBase {
   readonly bidSz: number;
   readonly askPx: number;
   readonly askSz: number;
-  /** MIC where the provider's venue code maps to one. */
+  /**
+   * The provider's own venue code, verbatim, as a string. Deliberately **not** normalized to a MIC:
+   * the per-vendor code tables are not public, and a wrong venue label is worse than an
+   * untranslated one. Resolve it with a map you trust via `micFor` in @conduit/providers.
+   */
   readonly bidVenue?: string;
   readonly askVenue?: string;
 }
@@ -40,6 +44,7 @@ export interface TradeTick extends CdmBase {
   readonly px: number;
   readonly sz: number;
   readonly tradeId?: string;
+  /** The provider's own venue code, verbatim. See the note on QuoteTick.bidVenue. */
   readonly venue?: string;
 }
 

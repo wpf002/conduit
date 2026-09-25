@@ -58,11 +58,11 @@ describe('alpaca fixture replay', () => {
     expect(isTrade(trade!) && trade!.sz).toBe(400);
   });
 
-  it('maps single-character venue codes to MICs', () => {
+  it("carries Alpaca's own single-character venue code verbatim", () => {
     const quote = normalizeAlpacaMessage(payloads[3]);
-    expect(isQuote(quote!) && quote!.bidVenue).toBe('IEXG');
+    expect(isQuote(quote!) && quote!.bidVenue).toBe('V');
     const trade = normalizeAlpacaMessage(payloads[6]);
-    expect(isTrade(trade!) && trade!.venue).toBe('EDGX');
+    expect(isTrade(trade!) && trade!.venue).toBe('K');
   });
 
   it('maps character condition codes to the same flags Polygon integers map to', () => {

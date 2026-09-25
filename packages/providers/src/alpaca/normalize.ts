@@ -9,7 +9,7 @@ import {
   type QuoteTick,
   type TradeTick,
 } from '@conduit/core';
-import { alpacaMic } from '../venues.js';
+import { venueCode } from '../venues.js';
 import { alpacaTradeFlags } from './conditions.js';
 
 const PROVIDER = 'alpaca' as const;
@@ -93,8 +93,8 @@ export function normalizeAlpacaMessage(
         bidSz: num(msg['bs'], 'bs') * quoteMultiplier,
         askPx: num(msg['ap'], 'ap'),
         askSz: num(msg['as'], 'as') * quoteMultiplier,
-        ...(alpacaMic(msg['bx']) ? { bidVenue: alpacaMic(msg['bx'])! } : {}),
-        ...(alpacaMic(msg['ax']) ? { askVenue: alpacaMic(msg['ax'])! } : {}),
+        ...(venueCode(msg['bx']) ? { bidVenue: venueCode(msg['bx'])! } : {}),
+        ...(venueCode(msg['ax']) ? { askVenue: venueCode(msg['ax'])! } : {}),
         ...raw,
       };
       return quote;
@@ -116,7 +116,7 @@ export function normalizeAlpacaMessage(
         ...(typeof msg['i'] === 'number' || typeof msg['i'] === 'string'
           ? { tradeId: String(msg['i']) }
           : {}),
-        ...(alpacaMic(msg['x']) ? { venue: alpacaMic(msg['x'])! } : {}),
+        ...(venueCode(msg['x']) ? { venue: venueCode(msg['x'])! } : {}),
         ...raw,
       };
       return trade;

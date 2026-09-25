@@ -10,7 +10,7 @@ import {
   type TradeTick,
 } from '@conduit/core';
 import { coerceEpochNs } from '../epoch.js';
-import { polygonMic } from '../venues.js';
+import { venueCode } from '../venues.js';
 import { polygonTradeFlags } from './conditions.js';
 
 const PROVIDER = 'polygon' as const;
@@ -103,8 +103,8 @@ export function normalizePolygonMessage(
         bidSz: num(msg['bs'], 'bs') * quoteMultiplier,
         askPx: num(msg['ap'], 'ap'),
         askSz: num(msg['as'], 'as') * quoteMultiplier,
-        ...(polygonMic(msg['bx']) ? { bidVenue: polygonMic(msg['bx'])! } : {}),
-        ...(polygonMic(msg['ax']) ? { askVenue: polygonMic(msg['ax'])! } : {}),
+        ...(venueCode(msg['bx']) ? { bidVenue: venueCode(msg['bx'])! } : {}),
+        ...(venueCode(msg['ax']) ? { askVenue: venueCode(msg['ax'])! } : {}),
         ...(typeof msg['q'] === 'number' ? { seq: BigInt(msg['q']) } : {}),
         ...raw,
       };
@@ -113,7 +113,12 @@ export function normalizePolygonMessage(
 
     case 'T': {
       const symbol = str(msg['sym'], 'sym');
-      const size = num(msg['s'], 's');
+      // `ds` is "the trade size including fractional shares, represented as a string". `s` alone
+      // truncates a fractional-share trade to a whole number, which silently understates it.
+      const size =
+        typeof msg['ds'] === 'string' && msg['ds'].length > 0
+          ? num(Number(msg['ds']), 'ds')
+          : num(msg['s'], 's');
       const trade: TradeTick = {
         kind: 'trade',
         figi: resolveFigi(symbol),
@@ -127,7 +132,7 @@ export function normalizePolygonMessage(
         ...(typeof msg['i'] === 'string' || typeof msg['i'] === 'number'
           ? { tradeId: String(msg['i']) }
           : {}),
-        ...(polygonMic(msg['x']) ? { venue: polygonMic(msg['x'])! } : {}),
+        ...(venueCode(msg['x']) ? { venue: venueCode(msg['x'])! } : {}),
         ...(typeof msg['q'] === 'number' ? { seq: BigInt(msg['q']) } : {}),
         ...raw,
       };

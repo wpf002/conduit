@@ -34,10 +34,10 @@ type Depth     = CdmBase & { kind: 'depth'; bids: Level[]; asks: Level[] };
 | # | Field | Polygon | Alpaca | Databento | CDM decision | Escape hatch |
 |---|---|---|---|---|---|---|
 | 1 | Venue timestamp | `t`, SIP, **ms** (confirmed) | `t`, RFC-3339 string, **ns** (confirmed) | `ts_event`, uint64 **ns** | `bigint` ns; Polygon × 1e6 | no (lossy, not leaky) |
-| 2 | Second timestamp | `y` participant ns on some types | none | `ts_recv` ns | `tsEvent` from venue, `tsConduitRecv` ours; `y`/`ts_recv` dropped | no |
+| 2 | Second timestamp | `pt` participant, **ms**, omitted on OTC via FINRA ORF (id 62) | none | `ts_recv` ns | `tsEvent` from venue, `tsConduitRecv` ours; `pt`/`ts_recv` stay in `raw` | no |
 | 3 | Sequence number | `q` per symbol | **none** | `sequence` | `seq?` optional; gap detection only where present | no |
 | 4 | Condition codes | `c: number[]` SIP ints | `c: string[]` char codes | `flags` bitfield + `action`/`side` chars | `flags?: number` Conduit bitfield + `raw` passthrough | **yes** |
-| 5 | Venue identity | `x`/`bx`/`ax` Polygon numeric ids, `z` tape | `x` single-char code | `publisher_id` + dataset | MIC where mappable, else `undefined` | **yes** |
+| 5 | Venue identity | `x`/`bx`/`ax` numeric ids, `z` tape | `x` single-char code | `publisher_id` + dataset | **the vendor's own code, verbatim** — no MIC translation | **yes** |
 | 6 | Price encoding | float | float | int64 fixed-point, scale 1e-9 | `number`; Databento ÷ 1e9 | no |
 | 7 | Quote size units | **shares** since 2025-11-03 (was round lots) | **round lots**, still | shares | shares; multiplier is per adapter, not shared — Massive 1x, Alpaca 100x | no |
 | 8 | Quote update semantics | full two-sided per message | full two-sided per message | `mbp-1` is an incremental book event with `action`/`side`; both sides present in `levels[0]` | two-sided snapshot; Databento adapter reconstructs | **yes** |
@@ -64,9 +64,32 @@ Alpaca, and the `'lots'` option remains for replaying pre-cutover flat files.
 This is the failure mode the `verify` markers existed for. A 100x size error is not visibly wrong in
 a log; it surfaces as bad fills in anything that conditions on quoted size.
 
-**Still marked verify, and needing a real capture:** rows 2 (`y` / `ts_recv` availability per
-message type), 9 (Databento's raw symbol spelling for class shares), and Databento's JSON rendering
-of 64-bit fields as strings versus numbers.
+## Rows 2 and 5 resolved, 2026-09-25
+
+Same method, same day. Two more of my own assumptions turned out to be wrong.
+
+**Row 2.** The participant timestamp is `pt`, not `y`, and it is in **milliseconds**, not
+nanoseconds. It is also optional: "Omitted on OTC trades reported through the FINRA ORF (exchange
+62), which have no participant timestamp." There is a third timestamp, `trft`, for the TRF. None of
+them enter the CDM; they stay in `raw`.
+
+**Row 5 — venue identity.** This file previously said the CDM would carry "MIC where mappable". The
+implementation did that with a hand-written numeric-id-to-MIC table that I wrote from memory, and it
+was wrong: it mapped Massive id 62 to MEMX, while Massive's own trade documentation says 62 is the
+FINRA ORF. Both vendors serve their real code tables only from authenticated reference endpoints.
+
+So the CDM now carries **the vendor's own venue code verbatim**, as a string, and does not claim it
+is a MIC. Consumers that want MICs register a map they trust via `registerVenueMap()` and resolve
+with `micFor()`. A wrong venue label is worse than an untranslated one, because a strategy filtering
+on venue acts on it silently.
+
+**Also found while reading the trade docs:** `ds` is "the trade size including fractional shares,
+represented as a string". The adapter read only `s`, which truncates a fractional-share trade. It now
+prefers `ds` when present.
+
+**Still needing a live capture or vendor support:** Databento's raw symbol spelling for class shares
+(row 9), and whether its JSON encoding renders 64-bit fields as strings or numbers. Neither is
+documented publicly; the adapter already accepts both shapes for the second.
 
 ## Escape-hatch count against the kill criteria
 

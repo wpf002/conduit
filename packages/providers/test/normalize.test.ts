@@ -86,9 +86,11 @@ describe('polygon quote normalization', () => {
     expect(isQuote(lots!) && lots!.askSz).toBe(200);
   });
 
-  it('maps venue codes to MICs', () => {
-    expect(isQuote(quote!) && quote!.bidVenue).toBe('XBOS');
-    expect(isQuote(quote!) && quote!.askVenue).toBe('XNYS');
+  it("carries the vendor's own venue code verbatim rather than guessing at a MIC", () => {
+    // Massive's numeric ids are only documented behind an authenticated reference endpoint, so a
+    // hand-written MIC table would be invention. An earlier one had id 62 wrong.
+    expect(isQuote(quote!) && quote!.bidVenue).toBe('11');
+    expect(isQuote(quote!) && quote!.askVenue).toBe('12');
   });
 
   it('keeps the sequence number Polygon provides', () => {
@@ -139,10 +141,26 @@ describe('polygon trade normalization', () => {
     expect(plain!.flags).toBe(0);
   });
 
+  it('prefers ds over s so a fractional-share trade is not truncated', () => {
+    const fractional = normalizePolygonMessage({
+      ev: 'T',
+      sym: 'AAPL',
+      i: '1',
+      x: 11,
+      p: 185,
+      s: 0,
+      ds: '0.25',
+      c: [],
+      t: 1704205800124,
+      q: 1,
+    });
+    expect(isTrade(fractional!) && fractional!.sz).toBe(0.25);
+  });
+
   it('keeps trade sizes in shares', () => {
     const trade = normalizePolygonMessage(payloads[7]);
     expect(isTrade(trade!) && trade!.sz).toBe(200);
-    expect(isTrade(trade!) && trade!.venue).toBe('MEMX');
+    expect(isTrade(trade!) && trade!.venue).toBe('62');
     expect(isTrade(trade!) && trade!.tradeId).toBe('52983525029463');
   });
 });
