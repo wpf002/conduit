@@ -130,6 +130,12 @@ Phase 5 is the go/no-go gate for product-ization, and three of its four outcomes
 staying an internal package. See [docs/phase-5-dogfood.md](docs/phase-5-dogfood.md) and
 [docs/migration.md](docs/migration.md).
 
+## Repository settings
+
+Public, with secret scanning, push protection, and Dependabot alerts and security updates on. `.env`
+is gitignored and has never been committed; `.fixtures/` likewise, because captured payloads are
+licensed market data and must not leave the machine that pulled them.
+
 ## Branch protection
 
 `main` requires the `ci` check and blocks force pushes. To reapply it, send a JSON body — the
@@ -251,4 +257,10 @@ have, and reports missing coverage rather than failing.
 
 ## License
 
-Unlicensed / all rights reserved (pending Phase 5 decision).
+**None.** This repository is public but unlicensed, which means all rights are reserved and nobody
+else may use, copy, or distribute it. That is deliberate rather than an oversight: the roadmap defers
+the licensing decision to Phase 6, which is gated on Phase 5, and `core` + `providers` + `symbology`
+go MIT only if that gate clears.
+
+Public and unlicensed is a coherent position — you can read it and audit the licensing claims above
+without acquiring any right to ship it.

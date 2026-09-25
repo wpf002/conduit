@@ -6,8 +6,8 @@ afterEach(clearSecrets);
 
 describe('redact', () => {
   it('masks a registered credential anywhere in the string', () => {
-    registerSecret('pk_live_abcdef123456');
-    expect(redact('GET /v2/last?apiKey=pk_live_abcdef123456 failed')).toBe(
+    registerSecret('notarealkey_abcdef123456');
+    expect(redact('GET /v2/last?apiKey=notarealkey_abcdef123456 failed')).toBe(
       'GET /v2/last?apiKey=[REDACTED] failed',
     );
   });
