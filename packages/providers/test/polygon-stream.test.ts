@@ -4,6 +4,7 @@ import { WebSocketServer, type WebSocket as ServerSocket } from 'ws';
 import {
   AuthError,
   RateLimitError,
+  isControl,
   isQuote,
   type CdmMessage,
   type ProviderAdapter,
@@ -366,5 +367,70 @@ describe('replay window', () => {
     expect(() =>
       adapter!.stream({ symbols: ['AAPL'], schema: 'quote_l1', end: 1_704_153_600_000_000_000n }),
     ).toThrow(/streams live only/);
+  });
+});
+
+describe('sequence gaps', () => {
+  it('emits nothing by default, because q is a channel counter', async () => {
+    fake = await startFakePolygon();
+    adapter = connect();
+    const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
+      Symbol.asyncIterator
+    ]();
+    await waitFor(() => fake!.subscribeFrames.length > 0);
+
+    // Two AAPL quotes numbered far apart: normal, because other symbols numbered in between.
+    fake.send(quotePayload('AAPL', 0));
+    fake.send(quotePayload('AAPL', 500));
+    const first = (await iterator.next()).value as CdmMessage;
+    const second = (await iterator.next()).value as CdmMessage;
+    expect(first.kind).toBe('quote');
+    expect(second.kind).toBe('quote');
+    await iterator.return?.();
+  });
+
+  it('emits a gap control message on the data stream when scope is configured', async () => {
+    fake = await startFakePolygon();
+    adapter = connect({ sequenceScope: 'symbol' });
+    const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
+      Symbol.asyncIterator
+    ]();
+    await waitFor(() => fake!.subscribeFrames.length > 0);
+
+    fake.send(quotePayload('AAPL', 0));
+    expect(((await iterator.next()).value as CdmMessage).kind).toBe('quote');
+
+    fake.send(quotePayload('AAPL', 5));
+    // The gap is announced before the message that revealed it.
+    const control = (await iterator.next()).value as CdmMessage;
+    expect(control.kind).toBe('control');
+    expect(isControl(control) && control.control).toBe('sequence_gap');
+    expect(isControl(control) && control.gap).toEqual({
+      symbol: 'AAPL',
+      expectedSeq: 13684491n,
+      receivedSeq: 13684495n,
+      missing: 4n,
+    });
+    expect(((await iterator.next()).value as CdmMessage).kind).toBe('quote');
+    await iterator.return?.();
+  });
+
+  it('resets its baseline on reconnect so renumbering is not a gap', async () => {
+    fake = await startFakePolygon();
+    adapter = connect({ sequenceScope: 'symbol' });
+    const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
+      Symbol.asyncIterator
+    ]();
+    await waitFor(() => fake!.subscribeFrames.length > 0);
+    fake.send(quotePayload('AAPL', 1_000));
+    await iterator.next();
+
+    fake.killActiveConnection();
+    await waitFor(() => fake!.subscribeFrames.length === 2);
+    // Renumbered from the start on the new connection.
+    fake.send(quotePayload('AAPL', 0), 1);
+    const next = (await iterator.next()).value as CdmMessage;
+    expect(next.kind).toBe('quote');
+    await iterator.return?.();
   });
 });

@@ -35,7 +35,7 @@ type Depth     = CdmBase & { kind: 'depth'; bids: Level[]; asks: Level[] };
 |---|---|---|---|---|---|---|
 | 1 | Venue timestamp | `t`, SIP, **ms** (confirmed) | `t`, RFC-3339 string, **ns** (confirmed) | `ts_event`, uint64 **ns** | `bigint` ns; Polygon × 1e6 | no (lossy, not leaky) |
 | 2 | Second timestamp | `pt` participant, **ms**, omitted on OTC via FINRA ORF (id 62) | none | `ts_recv` ns | `tsEvent` from venue, `tsConduitRecv` ours; `pt`/`ts_recv` stay in `raw` | no |
-| 3 | Sequence number | `q` per symbol | **none** | `sequence` | `seq?` optional; gap detection only where present | no |
+| 3 | Sequence number | `q`, **channel-wide** not per symbol | **none** | `sequence`, per publisher channel | `seq?` optional; gap detection needs the numbering to match your subscription — see below | no |
 | 4 | Condition codes | `c: number[]` SIP ints | `c: string[]` char codes | `flags` bitfield + `action`/`side` chars | `flags?: number` Conduit bitfield + `raw` passthrough | **yes** |
 | 5 | Venue identity | `x`/`bx`/`ax` numeric ids, `z` tape | `x` single-char code | `publisher_id` + dataset | **the vendor's own code, verbatim** — no MIC translation | **yes** |
 | 6 | Price encoding | float | float | int64 fixed-point, scale 1e-9 | `number`; Databento ÷ 1e9 | no |
@@ -63,6 +63,30 @@ Alpaca, and the `'lots'` option remains for replaying pre-cutover flat files.
 
 This is the failure mode the `verify` markers existed for. A 100x size error is not visibly wrong in
 a log; it surfaces as bad fills in anything that conditions on quoted size.
+
+## Row 3 corrected, 2026-09-25
+
+This file said gap detection was possible wherever a sequence number exists. That was too generous.
+
+Polygon's `q` and Databento's `sequence` are **channel-wide** counters: they increment across every
+symbol and message type on the feed. Conduit subscribes to a handful of symbols out of thousands, so
+two consecutive messages for one symbol are numbered hundreds apart, and every one of those looks
+like a gap while being entirely normal. Our own Polygon fixture shows it — `q` runs 13684490 through
+13684495 across two symbols and two message types.
+
+Detection is only meaningful when the numbering corresponds to what you receive:
+
+| Scope | Valid when | Default |
+|---|---|---|
+| `'symbol'` | the provider numbers per instrument | — |
+| `'stream'` | it numbers per channel **and** you subscribe to the whole channel | — |
+| `'none'` | neither holds | **yes** |
+
+`SequenceTracker` implements all three and the adapters default to `'none'`. Turning it on without
+knowing which case applies produces a control message per tick, which is worse than no detection.
+
+Confirming which case Polygon is actually in needs a live capture across a full channel — one more
+entry for the key-gated list in [conformance.md](conformance.md).
 
 ## Rows 2 and 5 resolved, 2026-09-25
 

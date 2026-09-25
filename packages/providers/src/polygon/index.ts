@@ -22,6 +22,7 @@ import {
   type UsageHooks,
 } from '@conduit/core';
 import { ConsumerSet } from '../fanout.js';
+import { SequenceTracker, type SequenceScope } from '../sequence.js';
 import { parseJsonLossless } from '../json.js';
 import { ReconnectingSocket } from '../ws.js';
 import { SubscriptionRegistry } from '../subscriptions.js';
@@ -58,6 +59,11 @@ export interface PolygonOptions {
   readonly includeRaw?: boolean;
   /** Quota accounting. Hand it `ledger.hooksFor('polygon')`. */
   readonly usage?: UsageHooks;
+  /**
+   * Gap detection against Polygon's `q`. Off by default: `q` is a channel-wide counter, so with a
+   * filtered subscription every message looks like a gap. See ../sequence.ts before enabling.
+   */
+  readonly sequenceScope?: SequenceScope;
   /** Test seam. Production code never passes this. */
   readonly socketFactory?: ConstructorParameters<typeof ReconnectingSocket>[1];
 }
@@ -73,6 +79,7 @@ class PolygonAdapter implements ProviderAdapter {
   #socket: ReconnectingSocket | undefined;
   #authenticated = false;
   #closed = false;
+  #sequence: SequenceTracker;
 
   constructor(options: PolygonOptions) {
     if (!options.apiKey) {
@@ -85,6 +92,15 @@ class PolygonAdapter implements ProviderAdapter {
       staleAfterMs: options.staleAfterMs ?? 30_000,
       maxConsecutiveFailures: options.maxConsecutiveFailures ?? 3,
     });
+    this.#sequence = new SequenceTracker({
+      provider: PROVIDER,
+      ...(options.sequenceScope ? { scope: options.sequenceScope } : {}),
+    });
+  }
+
+  /** Gap counters, for `conduit doctor` and for a soak run. */
+  get sequence(): SequenceTracker {
+    return this.#sequence;
   }
 
   health(): HealthSnapshot {
@@ -353,6 +369,25 @@ class PolygonAdapter implements ProviderAdapter {
     if (emitted.length === 0) return;
     this.#health.recordMessage(emitted.length);
     this.#reportUsage('ws_message', emitted.length);
+
+    for (const message of emitted) {
+      const gap = this.#sequence.check(message.symbol, message.seq);
+      if (!gap) continue;
+      // On the same stream as the data, so a consumer sees the gap in order with what surrounds it.
+      this.#consumers.dispatchControl(
+        {
+          kind: 'control',
+          control: 'sequence_gap',
+          provider: PROVIDER,
+          reason: `${gap.missing} message(s) missing between ${gap.expectedSeq} and ${gap.receivedSeq}`,
+          symbols: [gap.symbol],
+          tsConduitRecv: nowNs(),
+          gap,
+        },
+        gap.symbol,
+      );
+    }
+
     this.#consumers.dispatch(emitted);
   }
 
@@ -363,6 +398,8 @@ class PolygonAdapter implements ProviderAdapter {
     switch (status) {
       case 'auth_success': {
         this.#authenticated = true;
+        // Numbering may restart on a new connection; a stale baseline would invent a gap.
+        this.#sequence.reset();
         this.#resubscribeAll();
         return;
       }

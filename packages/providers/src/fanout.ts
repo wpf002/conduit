@@ -1,4 +1,4 @@
-import type { CdmMessage, MarketMessage, Schema } from '@conduit/core';
+import type { CdmMessage, ControlMessage, MarketMessage, Schema } from '@conduit/core';
 import { AsyncQueue } from './queue.js';
 
 export function schemaOf(message: MarketMessage): Schema {
@@ -50,6 +50,13 @@ export class ConsumerSet {
       if (other.schema === consumer.schema) for (const s of other.symbols) stillWanted.add(s);
     }
     return [...consumer.symbols].filter((s) => !stillWanted.has(s));
+  }
+
+  /** Delivers a control message to the consumers watching that symbol, on the same stream. */
+  dispatchControl(message: ControlMessage, symbol: string): void {
+    for (const consumer of this.#consumers) {
+      if (consumer.symbols.has(symbol)) consumer.queue.push(message);
+    }
   }
 
   dispatch(messages: readonly MarketMessage[]): void {
