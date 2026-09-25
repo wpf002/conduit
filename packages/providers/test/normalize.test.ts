@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   CdmFlags,
   SchemaError,
@@ -15,6 +15,7 @@ import {
 } from '@conduit/core';
 import { normalizePolygonMessage, normalizePolygonSnapshot } from '../src/polygon/normalize.js';
 import { parseJsonLossless, quoteLongIntegers } from '../src/json.js';
+import { clearConditionFlags, registerConditionFlags } from '../src/conditions.js';
 
 function loadFixture(name: string): unknown[] {
   const text = readFileSync(join(import.meta.dirname, 'fixtures', name), 'utf8');
@@ -25,6 +26,9 @@ function loadFixture(name: string): unknown[] {
 }
 
 const payloads = loadFixture('polygon-stocks.ndjson');
+
+// The condition registry is module state; each test states its own mappings.
+afterEach(clearConditionFlags);
 
 describe('polygon fixture replay', () => {
   const normalized = payloads
@@ -110,7 +114,15 @@ describe('polygon quote normalization', () => {
 });
 
 describe('polygon trade normalization', () => {
-  it('maps condition codes to the cross-vendor flag set', () => {
+  it('maps no condition code until a table is registered', () => {
+    // Massive's numeric conditions table is only available from /v3/reference/conditions, so the
+    // adapter ships no mappings rather than guessed ones.
+    const extendedHours = normalizePolygonMessage(payloads[6]);
+    expect(hasFlag(extendedHours!.flags, CdmFlags.TradeThroughExempt)).toBe(false);
+  });
+
+  it('maps condition codes once a registered table covers them', () => {
+    registerConditionFlags('polygon', { 12: CdmFlags.TradeThroughExempt, 37: CdmFlags.OddLot });
     const oddLot = normalizePolygonMessage(payloads[5]);
     expect(hasFlag(oddLot!.flags, CdmFlags.OddLot)).toBe(true);
     // Reported by the venue via condition 37, so not marked Derived.

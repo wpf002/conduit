@@ -17,19 +17,23 @@ import { coerceEpochNs } from '../epoch.js';
 
 const PROVIDER = 'databento' as const;
 
-/** Databento prices are int64 fixed-point with a 1e-9 scale. */
+/** FIXED_PRICE_SCALE in databento/dbn. Verified 2026-09-25. */
 const PRICE_SCALE = 1_000_000_000;
 
-/** int64 max marks an absent price — an empty book side, not a real level. */
+/** UNDEF_PRICE is i64::MAX and marks an absent price — an empty book side, not a real level. */
 const UNDEF_PRICE = 9_223_372_036_854_775_807n;
 
-/** Databento record flags. Only SNAPSHOT has a Conduit-level equivalent. */
+/**
+ * Databento record flags, verified 2026-09-25 against rust/dbn/src/flags.rs in databento/dbn. Only
+ * SNAPSHOT has a Conduit-level equivalent; the rest stay in `raw`.
+ */
 export const DBN_FLAG_LAST = 1 << 7;
 export const DBN_FLAG_TOB = 1 << 6;
 export const DBN_FLAG_SNAPSHOT = 1 << 5;
 export const DBN_FLAG_MBP = 1 << 4;
 export const DBN_FLAG_BAD_TS_RECV = 1 << 3;
 export const DBN_FLAG_MAYBE_BAD_BOOK = 1 << 2;
+export const DBN_FLAG_PUBLISHER_SPECIFIC = 1 << 1;
 
 export interface DatabentoNormalizeOptions {
   readonly resolveFigi?: (symbol: string) => string;

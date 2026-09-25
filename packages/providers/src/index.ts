@@ -8,3 +8,9 @@ export { ConsumerSet, schemaOf } from './fanout.js';
 export { coerceEpochNs } from './epoch.js';
 export { parseJsonLossless, quoteLongIntegers } from './json.js';
 export * from './venues.js';
+export {
+  ROUND_LOT,
+  clearConditionFlags,
+  conditionFlags,
+  registerConditionFlags,
+} from './conditions.js';

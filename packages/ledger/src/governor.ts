@@ -7,16 +7,28 @@ export interface QuotaSpec {
 }
 
 /**
- * Published limits for the plans Conduit has been tested against. These are a starting point that
- * observation refines — the point of the governor is to refuse locally instead of collecting a 429,
- * and being conservative costs a little throughput while being wrong costs a session.
+ * Free-tier limits, deliberately the most conservative plan. The governor refuses locally rather
+ * than collecting a 429, so being conservative costs a little throughput while being wrong costs a
+ * session. Override per provider for a paid tier.
+ *
+ * Provenance matters here, because a wrong ceiling is invisible until it bites:
+ *
+ * | Provider  | Limit      | Source                                              |
+ * |-----------|------------|-----------------------------------------------------|
+ * | polygon   | 5/min      | Massive pricing page, Stocks Basic. Verified 2026-09-25. Paid tiers are unlimited. |
+ * | alpaca    | 200/min    | Alpaca market data plans, Basic. Verified 2026-09-25. Algo Trader Plus is 10,000/min. |
+ * | databento | 100/sec    | **Unverified estimate.** Not published; confirm against a live 429 or their support. |
+ *
+ * Alpaca's Basic plan also caps websocket subscriptions at 30 symbols, which is a cap rather than a
+ * rate and so is not modelled here — it surfaces as error 405 from the adapter.
+ *
+ * Tiingo has no entry because it has no adapter yet; an unused ceiling is just another unverified
+ * number to trip over later.
  */
 export const DEFAULT_QUOTAS: Readonly<Partial<Record<ProviderId, QuotaSpec>>> = {
-  // Polygon's free tier. Paid tiers are unlimited; override there.
   polygon: { windowSec: 60, maxRequests: 5 },
   alpaca: { windowSec: 60, maxRequests: 200 },
   databento: { windowSec: 1, maxRequests: 100 },
-  tiingo: { windowSec: 3_600, maxRequests: 500 },
 };
 
 export type GovernorMode = 'queue' | 'refuse';

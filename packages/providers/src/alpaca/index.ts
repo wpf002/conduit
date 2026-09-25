@@ -4,6 +4,7 @@ import {
   CoverageError,
   HealthTracker,
   RateLimitError,
+  SchemaError,
   TransportError,
   isoToNs,
   nowNs,
@@ -47,27 +48,48 @@ const SUBSCRIBE_KEY: Readonly<Record<string, string>> = {
 };
 
 /**
- * Alpaca's documented stream error codes. The mapping matters because the router dispatches on
- * the error class: an entitlement problem must not be retried, a connection cap must.
+ * Alpaca's published websocket error codes. The mapping matters because the router dispatches on the
+ * error class: an entitlement problem must not be retried, a connection cap must, and a feed that
+ * cannot serve a subscription is a coverage gap rather than a dead key.
+ *
+ * Returning undefined means the code is benign and should not count as a failure.
  */
-function errorForCode(code: number, message: string): AuthError | RateLimitError | CoverageError | TransportError {
+function errorForCode(
+  code: number,
+  message: string,
+): AuthError | RateLimitError | CoverageError | TransportError | SchemaError | undefined {
   switch (code) {
-    case 401:
-    case 402:
-    case 404:
-    case 410:
+    // "invalid syntax" — Conduit sent a malformed frame. Retrying sends it again.
+    case 400:
+      return new SchemaError(`alpaca rejected our frame (400): ${message}`, { provider: PROVIDER });
+    case 401: // not authenticated
+    case 402: // auth failed
+    case 404: // auth timeout
       return new AuthError(`alpaca auth failed (${code}): ${message}`, { provider: PROVIDER });
-    case 409:
-      return new AuthError(`alpaca subscription does not cover this feed (${code}): ${message}`, {
-        provider: PROVIDER,
-      });
+    // "already authenticated" — harmless, and counting it as a failure would degrade a healthy feed.
+    case 403:
+      return undefined;
+    // "symbol limit exceeded" is a subscription cap, not a rate: the free plan allows 30 symbols.
+    // Retrying cannot help, so it has to read as a coverage gap for failover to do the right thing.
     case 405:
-    case 406:
-      return new RateLimitError(`alpaca limit reached (${code}): ${message}`, {
+      return new CoverageError(`alpaca symbol limit exceeded (405): ${message}`, {
         provider: PROVIDER,
       });
-    case 408:
-      return new CoverageError(`alpaca v2 data not enabled (${code}): ${message}`, {
+    case 406: // connection limit exceeded
+      return new RateLimitError(`alpaca connection limit reached (406): ${message}`, {
+        provider: PROVIDER,
+      });
+    case 407: // slow client — our consumer could not keep up
+      return new TransportError(`alpaca dropped us as a slow client (407): ${message}`, {
+        provider: PROVIDER,
+      });
+    case 409: // insufficient subscription
+      return new AuthError(`alpaca plan does not cover this feed (409): ${message}`, {
+        provider: PROVIDER,
+      });
+    // "invalid subscribe action for this feed" — the key is fine, the feed cannot serve it.
+    case 410:
+      return new CoverageError(`alpaca feed rejected the subscription (410): ${message}`, {
         provider: PROVIDER,
       });
     default:
@@ -390,8 +412,11 @@ class AlpacaAdapter implements ProviderAdapter {
       if (type === 'error') {
         const code = typeof msg['code'] === 'number' ? msg['code'] : 0;
         const error = errorForCode(code, redact(String(msg['msg'] ?? '')));
-        if (error.retryable) this.#health.recordFailure(error);
-        else this.#socket?.fail(error);
+        // undefined means benign; recording it would degrade a healthy feed.
+        if (error) {
+          if (error.retryable) this.#health.recordFailure(error);
+          else this.#socket?.fail(error);
+        }
         continue;
       }
       if (type === 'subscription') continue;

@@ -49,13 +49,15 @@ describe('cost model', () => {
 });
 
 describe('RateLimitGovernor', () => {
-  it('has a published limit for every provider Conduit adapts', () => {
-    expect(Object.keys(DEFAULT_QUOTAS).sort()).toEqual([
-      'alpaca',
-      'databento',
-      'polygon',
-      'tiingo',
-    ]);
+  it('has a limit for every provider that has an adapter, and none for one that does not', () => {
+    // Tiingo has no adapter yet, so it has no ceiling either: an unused number is just another
+    // unverified value to trip over later.
+    expect(Object.keys(DEFAULT_QUOTAS).sort()).toEqual(['alpaca', 'databento', 'polygon']);
+  });
+
+  it('uses the free-tier ceilings both vendors publish', () => {
+    expect(DEFAULT_QUOTAS.polygon).toEqual({ windowSec: 60, maxRequests: 5 });
+    expect(DEFAULT_QUOTAS.alpaca).toEqual({ windowSec: 60, maxRequests: 200 });
   });
 
   it('refuses locally instead of letting the provider answer 429', async () => {

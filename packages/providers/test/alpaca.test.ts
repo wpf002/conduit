@@ -18,7 +18,10 @@ import {
   type ProviderAdapter,
 } from '@conduit/core';
 import { alpaca } from '../src/alpaca/index.js';
+import { clearConditionFlags, registerConditionFlags } from '../src/conditions.js';
 import { normalizeAlpacaMessage } from '../src/alpaca/normalize.js';
+
+afterEach(clearConditionFlags);
 
 const payloads = readFileSync(join(import.meta.dirname, 'fixtures/alpaca-iex.ndjson'), 'utf8')
   .split('\n')
@@ -65,12 +68,20 @@ describe('alpaca fixture replay', () => {
     expect(isTrade(trade!) && trade!.venue).toBe('K');
   });
 
-  it('maps character condition codes to the same flags Polygon integers map to', () => {
+  it('maps character condition codes to the same flags, once a table is registered', () => {
+    // Registered separately from Polygon's, because the vocabularies differ: 'I' here, 37 there.
+    registerConditionFlags('alpaca', { I: CdmFlags.OddLot, T: CdmFlags.TradeThroughExempt });
     const oddLot = normalizeAlpacaMessage(payloads[5]);
     expect(hasFlag(oddLot!.flags, CdmFlags.OddLot)).toBe(true);
     expect(hasFlag(oddLot!.flags, CdmFlags.Derived)).toBe(false);
     const formT = normalizeAlpacaMessage(payloads[6]);
     expect(hasFlag(formT!.flags, CdmFlags.TradeThroughExempt)).toBe(true);
+  });
+
+  it('still derives odd lot from size with no table registered', () => {
+    const smallTrade = normalizeAlpacaMessage(payloads[5]);
+    expect(hasFlag(smallTrade!.flags, CdmFlags.OddLot)).toBe(true);
+    expect(hasFlag(smallTrade!.flags, CdmFlags.Derived)).toBe(true);
   });
 
   it('distinguishes minute from daily bars and derives the window end', () => {

@@ -87,9 +87,52 @@ on venue acts on it silently.
 represented as a string". The adapter read only `s`, which truncates a fractional-share trade. It now
 prefers `ds` when present.
 
+## Audit of everything else written from memory, 2026-09-25
+
+After three assumptions in a row turned out to be wrong, every remaining hand-written table in the
+codebase was checked against a primary source. Provenance for each is now recorded next to it.
+
+| Table | Verdict |
+|---|---|
+| DBN record flag bits | **correct**, verified against `rust/dbn/src/flags.rs` in databento/dbn. Added the one that was missing, `PUBLISHER_SPECIFIC`. |
+| Databento `FIXED_PRICE_SCALE` (1e9) and `UNDEF_PRICE` (i64::MAX) | **correct**, same source |
+| Governor ceiling, Massive 5/min | **correct**, Massive pricing page, Stocks Basic |
+| Governor ceiling, Alpaca 200/min | **correct**, Alpaca market data plans, Basic |
+| Governor ceiling, Databento 100/sec | **unverified** — not published. Marked as an estimate in the code. |
+| Governor ceiling, Tiingo | **removed** — no adapter exists, so the number was only there to be wrong later |
+| Alpaca websocket error codes | **two real bugs**, below |
+| Massive trade condition codes | **unverifiable** — behind `/v3/reference/conditions` |
+| Alpaca trade condition codes | **unverifiable** — behind `/v2/stocks/meta/conditions` |
+
+### Alpaca error codes
+
+The published table is 400, 401, 402, 403, 404, 405, 406, 407, 409, 410, 500. Two were wrong and one
+did not exist:
+
+- **410 is "invalid subscribe action for this feed"**, and was mapped to `AuthError`. That is the
+  worst possible misreading: a working key would be reported as revoked by `conduit doctor` and
+  dropped from coverage by the router. It is a `CoverageError`.
+- **403 is "already authenticated"**, which is harmless. It was counted as a transport failure,
+  degrading a healthy feed toward an unnecessary failover. It is now ignored.
+- **405 "symbol limit exceeded"** was a `RateLimitError`, which is retryable — but it is a cap, not a
+  rate, so retrying can never clear it. Now a `CoverageError`, which is what makes failover fire.
+- **400 "invalid syntax"** was a retryable `TransportError`, which would resend the same malformed
+  frame forever. Now a `SchemaError`.
+- **408 "v2 not enabled"** does not exist in Alpaca's table. The branch was dead code and is gone.
+
+### Condition codes
+
+Neither vendor publishes its condition table outside an authenticated endpoint. This repo shipped
+eight numeric mappings for Massive under a comment claiming they were *"verified against Polygon's
+published stock trade conditions list"*. They were not verified — the comment was false.
+
+Both tables are now empty. Codes map to flags only after a consumer registers a table from the
+vendor's own endpoint, via `registerConditionFlags()`. Odd lot is still derived from size below 100
+shares and marked `Derived`, because that needs no table.
+
 **Still needing a live capture or vendor support:** Databento's raw symbol spelling for class shares
-(row 9), and whether its JSON encoding renders 64-bit fields as strings or numbers. Neither is
-documented publicly; the adapter already accepts both shapes for the second.
+(row 9), whether its JSON encoding renders 64-bit fields as strings or numbers (the adapter accepts
+both), and Databento's rate limits.
 
 ## Escape-hatch count against the kill criteria
 
