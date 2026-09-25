@@ -1,4 +1,4 @@
-import type { CdmMessage, ControlMessage, MarketMessage, Schema } from '@conduit/core';
+import { nowNs, type CdmMessage, type ControlMessage, type MarketMessage, type ProviderId, type Schema } from '@conduit/core';
 import { AsyncQueue } from './queue.js';
 
 export function schemaOf(message: MarketMessage): Schema {
@@ -32,12 +32,39 @@ export class ConsumerSet {
     return this.#consumers.size;
   }
 
-  add(schema: Schema, symbols: readonly string[], highWaterMark: number): Consumer {
-    const consumer: Consumer = {
-      schema,
-      symbols: new Set(symbols),
-      queue: new AsyncQueue<CdmMessage>({ highWaterMark }),
-    };
+  add(
+    schema: Schema,
+    symbols: readonly string[],
+    highWaterMark: number,
+    provider: ProviderId,
+  ): Consumer {
+    const symbolSet = new Set(symbols);
+    // The queue tells the consumer when it is losing data. Announced on the consumer's own stream,
+    // urgently, so the message about dropping is not itself dropped.
+    const queue = new AsyncQueue<CdmMessage>({
+      highWaterMark,
+      onOverflow: (info) =>
+        queue.pushUrgent({
+          kind: 'control',
+          control: 'backpressure',
+          provider,
+          reason: `consumer is behind; dropping the oldest of ${info.highWaterMark} buffered messages`,
+          symbols: [...symbolSet],
+          tsConduitRecv: nowNs(),
+          backpressure: info,
+        }),
+      onRecover: (info) =>
+        queue.pushUrgent({
+          kind: 'control',
+          control: 'backpressure_recovered',
+          provider,
+          reason: `consumer caught up after dropping ${info.droppedThisEpisode} message(s)`,
+          symbols: [...symbolSet],
+          tsConduitRecv: nowNs(),
+          backpressure: info,
+        }),
+    });
+    const consumer: Consumer = { schema, symbols: symbolSet, queue };
     this.#consumers.add(consumer);
     return consumer;
   }

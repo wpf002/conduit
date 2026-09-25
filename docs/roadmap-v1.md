@@ -97,7 +97,7 @@ The things that surface after a week of uptime rather than in a test.
 | Gap | Why it matters |
 |---|---|
 | ~~**Sequence gaps are captured and ignored.**~~ | **Partly done.** `SequenceTracker` emits a `sequence_gap` control message on the data stream. Off by default: both providers number per channel, not per symbol, so with a filtered subscription every message is a false gap. Which case Polygon is in needs a live capture. |
-| **Backpressure is silent.** `AsyncQueue` drops the oldest past `highWaterMark` and only increments a counter nobody reads. | A slow consumer silently loses data. It needs a control message, not a field. |
+| ~~**Backpressure is silent.**~~ | **Done.** `backpressure` and `backpressure_recovered` control messages, one per episode, delivered in a lane that cannot itself be dropped. |
 | ~~**Market-closed hours.**~~ | **Done.** Staleness now needs corroboration: the router snapshots a standby and only switches if that standby has current data. No calendar needed, and it handles holidays, half-days and venue outages for free. |
 | **No logging interface.** The library is silent by design, with `onEvent` as the only hook. | Diagnosing a live incident means adding print statements to a dependency. |
 | **`conduit doctor` cannot see a stream.** It probes REST only. | The failure mode most likely in production — a socket that connects, authenticates, and then goes quiet — is the one doctor cannot detect. |
