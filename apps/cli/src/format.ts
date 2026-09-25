@@ -24,6 +24,8 @@ export function statusLabel(status: string): string {
       return pc.yellow('no entitlement');
     case 'rate_limited':
       return pc.yellow('rate limited');
+    case 'silent':
+      return pc.red('silent');
     case 'auth_failed':
       return pc.red('auth failed');
     case 'unreachable':

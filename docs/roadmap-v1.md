@@ -99,8 +99,8 @@ The things that surface after a week of uptime rather than in a test.
 | ~~**Sequence gaps are captured and ignored.**~~ | **Partly done.** `SequenceTracker` emits a `sequence_gap` control message on the data stream. Off by default: both providers number per channel, not per symbol, so with a filtered subscription every message is a false gap. Which case Polygon is in needs a live capture. |
 | ~~**Backpressure is silent.**~~ | **Done.** `backpressure` and `backpressure_recovered` control messages, one per episode, delivered in a lane that cannot itself be dropped. |
 | ~~**Market-closed hours.**~~ | **Done.** Staleness now needs corroboration: the router snapshots a standby and only switches if that standby has current data. No calendar needed, and it handles holidays, half-days and venue outages for free. |
-| **No logging interface.** The library is silent by design, with `onEvent` as the only hook. | Diagnosing a live incident means adding print statements to a dependency. |
-| **`conduit doctor` cannot see a stream.** It probes REST only. | The failure mode most likely in production — a socket that connects, authenticates, and then goes quiet — is the one doctor cannot detect. |
+| ~~**No logging interface.**~~ | **Done.** A one-function `Logger` in core, level-filtered, credential-redacting, and guaranteed not to throw into the data path. Silent without one. |
+| ~~**`conduit doctor` cannot see a stream.**~~ | **Done.** `--stream-ms` opens one and reports `silent` — but only when the REST snapshot is current, since silence outside market hours is correct. |
 
 **Acceptance:** a soak run across a real session boundary (close, overnight, open) with zero spurious
 failovers, plus a gap-injection test that produces exactly one gap message.
@@ -112,6 +112,9 @@ once a key exists.
 *Effort: 2–3 weeks. The market-closed item is the one that will bite first.*
 
 ---
+
+**M3 is complete.** All five items are closed. The live soak across a real session boundary remains
+worth doing once a key exists, but the behaviour it would check is covered by tests.
 
 ## M4 — Dogfood
 

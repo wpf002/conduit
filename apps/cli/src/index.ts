@@ -77,8 +77,10 @@ program
   .description('Validate every configured key and report coverage, latency, and quota headroom')
   .option('--symbols <list>', 'comma-separated probe symbols', 'AAPL')
   .option('--no-reference', 'skip loading vendor venue and condition tables')
+  .option('--stream-ms <ms>', 'also open a stream for this long to catch a silent socket', '4000')
   .option('--json', 'machine-readable output')
-  .action(async (opts: { symbols: string; reference: boolean; json?: boolean }) => {
+  .action(
+    async (opts: { symbols: string; reference: boolean; streamMs: string; json?: boolean }) => {
     const env = loadEnv();
     const ledger = new UsageLedger({ store: new MemoryLedgerStore() });
     const adapters = env.adapters;
@@ -112,6 +114,7 @@ program
       ledger,
       missing: env.missing,
       probeSymbols: opts.symbols.split(',').map((s) => s.trim()),
+      streamProbeMs: Number(opts.streamMs),
       loadReference: loaders,
     });
 
@@ -158,7 +161,8 @@ program
     await Promise.all(adapters.map((a) => a.close()));
     await ledger.close();
     process.exitCode = report.ok ? 0 : 1;
-  });
+  },
+  );
 
 // ------------------------------------------------------------------------- spend
 program

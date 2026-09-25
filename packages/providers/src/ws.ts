@@ -8,6 +8,7 @@ import {
   type BackoffOptions,
   type ConduitError,
   type HealthTracker,
+  type Logger,
 } from '@conduit/core';
 
 export interface SocketContext {
@@ -35,6 +36,8 @@ export interface ReconnectingSocketOptions {
   /** Called when retrying cannot help — a revoked key, for instance. Stops the reconnect loop. */
   readonly onFatal?: (error: ConduitError) => void;
   readonly onReconnect?: (attempt: number, delayMs: number) => void;
+  /** Already wrapped by createLogger, so it filters, redacts and cannot throw. */
+  readonly logger?: Logger;
 }
 
 type SocketFactory = (url: string) => WebSocket;
@@ -81,6 +84,7 @@ export class ReconnectingSocket {
 
   /** Marks the failure fatal, stops reconnecting, and reports it to the caller. */
   fail(error: ConduitError): void {
+    this.#log('error', 'fatal, not retrying', { code: error.code, error: error.message });
     this.#fatal = error;
     this.#options.health.recordFailure(error);
     this.#options.onFatal?.(error);
@@ -113,6 +117,19 @@ export class ReconnectingSocket {
     });
   }
 
+  #log(
+    level: 'debug' | 'info' | 'warn' | 'error',
+    msg: string,
+    fields?: Record<string, unknown>,
+  ): void {
+    this.#options.logger?.({
+      level,
+      msg,
+      provider: this.#options.health.provider,
+      ...(fields ? { fields } : {}),
+    });
+  }
+
   #clearTimers(): void {
     for (const timer of [this.#reconnectTimer, this.#pingTimer, this.#pongTimer]) {
       if (timer) clearTimeout(timer);
@@ -126,6 +143,8 @@ export class ReconnectingSocket {
     if (this.#closed || this.#fatal) return;
     const delay = backoffDelayMs(this.#attempt, this.#options.backoff ?? DEFAULT_BACKOFF);
     this.#attempt += 1;
+    // #attempt was incremented above, so it is already this reconnect's ordinal.
+    this.#log('warn', 'reconnecting', { attempt: this.#attempt, delayMs: delay, reason });
     this.#options.onReconnect?.(this.#attempt, delay);
     this.#options.health.recordFailure(new TransportError(redact(reason)));
     this.#reconnectTimer = setTimeout(() => {
@@ -184,6 +203,7 @@ export class ReconnectingSocket {
 
     socket.on('open', () => {
       this.#attempt = 0;
+      this.#log('info', 'socket open');
       this.#options.health.recordConnected();
       this.#startKeepalive(socket);
       this.#options.onOpen(ctx);
@@ -197,6 +217,7 @@ export class ReconnectingSocket {
           return;
         }
         // Feeding this to JSON.parse would produce an opaque parse failure every frame.
+        this.#log('error', 'binary frame on a JSON socket; the peer is likely speaking msgpack');
         this.#options.health.recordFailure(
           new TransportError(
             'received a binary frame on a socket expecting JSON; the peer is likely speaking msgpack',
@@ -209,6 +230,7 @@ export class ReconnectingSocket {
 
     socket.on('error', (error: Error) => {
       // 'error' is always followed by 'close', which is where the reconnect is scheduled.
+      this.#log('warn', 'socket error', { error: error.message });
       this.#options.health.recordFailure(new TransportError(redact(error.message)));
     });
 
@@ -218,6 +240,7 @@ export class ReconnectingSocket {
       if (this.#socket === socket) this.#socket = undefined;
       if (this.#closed || this.#fatal) return;
       const reason = reasonBuf.length > 0 ? reasonBuf.toString() : `code ${code}`;
+      this.#log('info', 'socket closed', { code, reason });
       // 1008/4001-class policy closes on a market data feed almost always mean a bad key.
       if (code === 1008) {
         this.fail(new AuthError(`socket rejected: ${redact(reason)}`));

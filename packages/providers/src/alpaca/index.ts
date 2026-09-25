@@ -9,6 +9,7 @@ import {
   isoToNs,
   nowNs,
   redact,
+  createLogger,
   registerSecret,
   type AssetClass,
   type BackoffOptions,
@@ -20,6 +21,7 @@ import {
   type Schema,
   type SnapshotRequest,
   type StreamRequest,
+  type Logger,
   type UsageHooks,
 } from '@conduit/core';
 import { ConsumerSet } from '../fanout.js';
@@ -117,6 +119,9 @@ export interface AlpacaOptions {
   readonly includeRaw?: boolean;
   /** Quota accounting. Hand it `ledger.hooksFor('alpaca')`. */
   readonly usage?: UsageHooks;
+  /** Diagnostics. Without one the adapter is silent. */
+  readonly logger?: Logger;
+  readonly logLevel?: 'debug' | 'info' | 'warn' | 'error';
   /** Test seam. Production code never passes this. */
   readonly socketFactory?: ConstructorParameters<typeof ReconnectingSocket>[1];
 }
@@ -132,6 +137,7 @@ class AlpacaAdapter implements ProviderAdapter {
   #socket: ReconnectingSocket | undefined;
   #authenticated = false;
   #closed = false;
+  #log: Logger;
 
   constructor(options: AlpacaOptions) {
     if (!options.keyId || !options.secret) {
@@ -140,6 +146,9 @@ class AlpacaAdapter implements ProviderAdapter {
     registerSecret(options.keyId);
     registerSecret(options.secret);
     this.#options = options;
+    this.#log = createLogger(options.logger, {
+      ...(options.logLevel ? { level: options.logLevel } : {}),
+    });
     this.#health = new HealthTracker({
       provider: PROVIDER,
       staleAfterMs: options.staleAfterMs ?? 30_000,
@@ -352,6 +361,7 @@ class AlpacaAdapter implements ProviderAdapter {
           );
         },
         onText: (data) => this.#onText(data),
+        logger: this.#log,
         onFatal: (error) => {
           this.#consumers.failAll(error);
         },
@@ -405,6 +415,7 @@ class AlpacaAdapter implements ProviderAdapter {
 
       if (type === 'success') {
         if (msg['msg'] === 'authenticated') {
+          this.#log({ level: 'info', msg: 'authenticated', provider: PROVIDER });
           this.#authenticated = true;
           this.#resubscribeAll();
         }

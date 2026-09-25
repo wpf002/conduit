@@ -29,6 +29,10 @@ interface ProbeAdapterOptions {
   /** Thrown for any non-equity probe, which is how an entitlement gap looks. */
   readonly nonEquityError?: Error;
   readonly latencyMs?: number;
+  /** How old the snapshot's data is. Fresh means something is trading. */
+  readonly snapshotAgeMs?: number;
+  /** Messages the stream emits. An empty array is a socket that connects and says nothing. */
+  readonly streamMessages?: number;
 }
 
 /** A provider that fails in exactly the way the test is about. */
@@ -69,12 +73,13 @@ class ProbeAdapter implements ProviderAdapter {
     } else if (this.#options.nonEquityError) {
       throw this.#options.nonEquityError;
     }
+    const ageNs = BigInt(this.#options.snapshotAgeMs ?? 0) * 1_000_000n;
     return req.symbols.map((symbol) => ({
       kind: 'quote' as const,
       figi: UNRESOLVED_FIGI,
       symbol,
       provider: this.id,
-      tsEvent: nowNs(),
+      tsEvent: nowNs() - ageNs,
       tsConduitRecv: nowNs(),
       bidPx: 100,
       bidSz: 100,
@@ -83,8 +88,34 @@ class ProbeAdapter implements ProviderAdapter {
     }));
   }
 
-  stream(_req: StreamRequest): AsyncIterable<CdmMessage> {
-    return { async *[Symbol.asyncIterator]() {} };
+  stream(req: StreamRequest): AsyncIterable<CdmMessage> {
+    const count = this.#options.streamMessages ?? 0;
+    const provider = this.id;
+    const symbol = req.symbols[0] ?? 'AAPL';
+    const signal = req.signal;
+    return {
+      async *[Symbol.asyncIterator]() {
+        for (let i = 0; i < count; i += 1) {
+          yield {
+            kind: 'quote' as const,
+            figi: UNRESOLVED_FIGI,
+            symbol,
+            provider,
+            tsEvent: nowNs(),
+            tsConduitRecv: nowNs(),
+            bidPx: 100,
+            bidSz: 100,
+            askPx: 100.01,
+            askSz: 100,
+          };
+        }
+        // A silent socket: connected, nothing to say, until the caller gives up.
+        await new Promise<void>((resolve) => {
+          if (signal?.aborted) return resolve();
+          signal?.addEventListener('abort', () => resolve(), { once: true });
+        });
+      },
+    };
   }
 
   async close(): Promise<void> {}
@@ -282,5 +313,64 @@ describe('reference table loading', () => {
   it('loads nothing when no loaders are given', async () => {
     const report = await runDoctor({ adapters: [new ProbeAdapter('polygon')] });
     expect(report.reference).toEqual([]);
+  });
+});
+
+describe('stream probe', () => {
+  it('flags a socket that connects and then says nothing while the market is trading', async () => {
+    const report = await runDoctor({
+      // REST data is current, so something is printing. The stream sending nothing is a real fault.
+      adapters: [new ProbeAdapter('polygon', { snapshotAgeMs: 50, streamMessages: 0 })],
+      streamProbeMs: 60,
+    });
+    const check = report.checks[0]!;
+    expect(check.status).toBe('silent');
+    expect(check.streamed).toBe(0);
+    expect(check.detail).toMatch(/no quote_l1 messages in 60ms/);
+    expect(report.ok).toBe(false);
+  });
+
+  it('does not flag silence when the REST data is stale too', async () => {
+    const report = await runDoctor({
+      // Nothing has printed for ten minutes. The market is closed; silence is correct.
+      adapters: [new ProbeAdapter('polygon', { snapshotAgeMs: 600_000, streamMessages: 0 })],
+      streamProbeMs: 60,
+    });
+    const check = report.checks[0]!;
+    expect(check.status).toBe('ok');
+    expect(check.detail).toMatch(/market is probably closed/);
+    expect(report.ok).toBe(true);
+  });
+
+  it('reports a healthy stream', async () => {
+    const report = await runDoctor({
+      adapters: [new ProbeAdapter('polygon', { snapshotAgeMs: 10, streamMessages: 3 })],
+      streamProbeMs: 500,
+    });
+    expect(report.checks[0]!.status).toBe('ok');
+    expect(report.checks[0]!.streamed).toBe(1);
+    expect(report.checks[0]!.detail).toMatch(/1 quote_l1 message streamed/);
+  });
+
+  it('skips the probe when not asked', async () => {
+    const report = await runDoctor({ adapters: [new ProbeAdapter('polygon')] });
+    expect(report.checks[0]!.streamed).toBeUndefined();
+  });
+
+  it('does not probe a stream for a key that already failed auth', async () => {
+    const report = await runDoctor({
+      adapters: [new ProbeAdapter('polygon', { equityError: new AuthError('revoked') })],
+      streamProbeMs: 60,
+    });
+    expect(report.checks[0]!.status).toBe('auth_failed');
+    expect(report.checks[0]!.streamed).toBeUndefined();
+  });
+
+  it('reports how old the REST data was, so silence can be judged', async () => {
+    const report = await runDoctor({
+      adapters: [new ProbeAdapter('polygon', { snapshotAgeMs: 1_234 })],
+      streamProbeMs: 40,
+    });
+    expect(report.checks[0]!.snapshotAgeMs).toBeGreaterThanOrEqual(1_234);
   });
 });
