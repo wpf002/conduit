@@ -354,3 +354,17 @@ describe('usage accounting', () => {
     await expect(adapter.snapshot({ symbols: ['AAPL'] })).rejects.toThrow(RateLimitError);
   });
 });
+
+describe('replay window', () => {
+  it('refuses a historical window rather than silently returning live data', async () => {
+    fake = await startFakePolygon();
+    adapter = connect();
+    // Silently ignoring `start` would hand back live quotes for a 2024 request.
+    expect(() =>
+      adapter!.stream({ symbols: ['AAPL'], schema: 'quote_l1', start: 1_704_153_600_000_000_000n }),
+    ).toThrow(/streams live only/);
+    expect(() =>
+      adapter!.stream({ symbols: ['AAPL'], schema: 'quote_l1', end: 1_704_153_600_000_000_000n }),
+    ).toThrow(/streams live only/);
+  });
+});
