@@ -77,6 +77,51 @@ const MBP_10 = {
   symbol: 'ESZ4',
 };
 
+describe('the other JSON encoding', () => {
+  // Databento's serializer has two modes per numeric field, chosen by the server. With pretty_px on,
+  // a price is already a decimal string and an absent one is null — not int64 max. Reading a
+  // "185.110000000" as fixed-point would divide it by a billion.
+  const PRETTY = {
+    hd: { ts_event: '1704205800123456789', rtype: 1, publisher_id: 2, instrument_id: 32 },
+    price: '185.115000000',
+    size: 50,
+    action: 'T',
+    side: 'A',
+    flags: 0,
+    sequence: 774_513,
+    symbol: 'AAPL',
+  };
+
+  it('reads a decimal price string without scaling it', () => {
+    const trade = normalizeDatabentoRecord(PRETTY, 'trades');
+    expect(trade!.kind === 'trade' && trade.px).toBe(185.115);
+    expect(dbnPrice('185.110000000', 'x')).toBe(185.11);
+    // And still reads the fixed-point form.
+    expect(dbnPrice('185110000000', 'x')).toBe(185.11);
+  });
+
+  it('treats a null price as an absent level, the way pretty mode writes it', () => {
+    expect(dbnPrice(null, 'bid_px')).toBeUndefined();
+    const oneSided = normalizeDatabentoRecord(
+      { ...MBP_1, levels: [{ ...MBP_1.levels[0], bid_px: null, bid_sz: 0 }] },
+      'quote_l1',
+    );
+    expect(isQuote(oneSided!) && oneSided!.bidPx).toBe(0);
+    expect(() => assertCdmInvariants(oneSided!)).not.toThrow();
+  });
+
+  it('rejects a decimal string that is not a number rather than emitting NaN', () => {
+    expect(() => dbnPrice('1.2.3', 'px')).toThrow(/decimal price/);
+  });
+
+  it('skips a record whose ts_event is null, which is how error records render', () => {
+    // The encoder writes null for a zero or undefined timestamp. No event time, not market data.
+    expect(
+      normalizeDatabentoRecord({ ...MBP_1, hd: { ...MBP_1.hd, ts_event: null } }, 'quote_l1'),
+    ).toBeUndefined();
+  });
+});
+
 describe('databento normalization', () => {
   it('scales fixed-point int64 prices by 1e-9', () => {
     const quote = normalizeDatabentoRecord(MBP_1, 'quote_l1');
@@ -248,6 +293,9 @@ describe('databento replay', () => {
     const body = new URLSearchParams(hist.requests[0]!.body);
     expect(body.get('schema')).toBe('mbp-10');
     expect(body.get('map_symbols')).toBe('true');
+    // Pinned, so the numeric format does not depend on a server default.
+    expect(body.get('pretty_px')).toBe('false');
+    expect(body.get('pretty_ts')).toBe('false');
     expect(body.get('encoding')).toBe('json');
     expect(body.get('stype_in')).toBe('raw_symbol');
     expect(body.get('start')).toBe('2024-01-02T14:30:00.000000000Z');

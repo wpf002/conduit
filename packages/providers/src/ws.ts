@@ -22,6 +22,13 @@ export interface ReconnectingSocketOptions {
   /** Auth and resubscribe live here; called on every open, including reconnects. */
   readonly onOpen: (ctx: SocketContext) => void;
   readonly onText: (data: string, ctx: SocketContext) => void;
+  /**
+   * Binary frames. Without a handler, one is reported as a transport failure naming msgpack, which
+   * is the only reason a market data socket sends binary: Alpaca's stream speaks msgpack when the
+   * connection asks for it with `Content-Type: application/msgpack`, and its own SDK defaults to
+   * that. Conduit asks for JSON, so a binary frame means something negotiated differently.
+   */
+  readonly onBinary?: (data: Buffer, ctx: SocketContext) => void;
   /** Client-side keepalive. A missing pong terminates the socket and forces a reconnect. */
   readonly pingIntervalMs?: number;
   readonly pongTimeoutMs?: number;
@@ -182,7 +189,21 @@ export class ReconnectingSocket {
       this.#options.onOpen(ctx);
     });
 
-    socket.on('message', (data: WebSocket.RawData) => {
+    socket.on('message', (data: WebSocket.RawData, isBinary: boolean) => {
+      if (isBinary) {
+        const onBinary = this.#options.onBinary;
+        if (onBinary) {
+          onBinary(Buffer.isBuffer(data) ? data : Buffer.from(data as ArrayBuffer), ctx);
+          return;
+        }
+        // Feeding this to JSON.parse would produce an opaque parse failure every frame.
+        this.#options.health.recordFailure(
+          new TransportError(
+            'received a binary frame on a socket expecting JSON; the peer is likely speaking msgpack',
+          ),
+        );
+        return;
+      }
       this.#options.onText(data.toString(), ctx);
     });
 

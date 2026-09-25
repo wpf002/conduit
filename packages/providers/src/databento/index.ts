@@ -201,6 +201,11 @@ class DatabentoAdapter implements ProviderAdapter {
       stype_in: this.#options.stypeIn ?? 'raw_symbol',
       // Without this, records carry only instrument_id and the symbol cannot be recovered.
       map_symbols: 'true',
+      // Pin the numeric formatting rather than inheriting a server default. With pretty on, prices
+      // arrive as decimal strings and absent ones as null; with it off, as fixed-point integers.
+      // The normalizer reads both, but the request should not be ambiguous about which it wants.
+      pretty_px: 'false',
+      pretty_ts: 'false',
       start: nsToIso(req.start!),
       ...(req.end === undefined ? {} : { end: nsToIso(req.end) }),
     });

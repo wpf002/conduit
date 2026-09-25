@@ -67,9 +67,35 @@ function int64(value: unknown, field: string): bigint {
   });
 }
 
-/** Fixed-point int64 to a float price. Returns undefined for an absent level. */
+/**
+ * A price, from any of the three shapes Databento's JSON encoder can produce.
+ *
+ * Its serializer (rust/dbn/src/encode/json/serialize.rs) has two modes per field, chosen by the
+ * server, and the difference is not cosmetic:
+ *
+ * - `pretty_px=false`: fixed-point int64, rendered as a **string** to avoid precision loss —
+ *   `"185110000000"`. Divide by 1e9.
+ * - `pretty_px=true`: an already-decimal **string** — `"185.110000000"` — and `null` for an absent
+ *   price rather than int64 max.
+ *
+ * The adapter pins `pretty_px=false`, but reading both costs nothing and a wrong reading here is a
+ * price off by a factor of a billion.
+ */
 export function dbnPrice(value: unknown, field: string): number | undefined {
   if (value === undefined || value === null) return undefined;
+
+  // A decimal point means the value is already a price, not fixed-point.
+  if (typeof value === 'string' && value.includes('.')) {
+    const px = Number(value);
+    if (!Number.isFinite(px)) {
+      throw new SchemaError(`cannot read ${field} as a decimal price: ${value}`, {
+        provider: PROVIDER,
+        field,
+      });
+    }
+    return px;
+  }
+
   const n = int64(value, field);
   if (n === UNDEF_PRICE || n === -UNDEF_PRICE) return undefined;
   return Number(n) / PRICE_SCALE;
@@ -160,6 +186,10 @@ export function normalizeDatabentoRecord(
   if (record['hd'] === undefined) return undefined;
 
   const hd = header(record);
+  // The encoder writes null for a zero or undefined timestamp, which happens on error and system
+  // records rather than data records. No event time means it is not a market message.
+  if (hd.ts_event === null || hd.ts_event === undefined) return undefined;
+
   const symbol = symbolOf(record, hd, options);
   const resolveFigi = options.resolveFigi ?? (() => UNRESOLVED_FIGI);
   const base = {
