@@ -136,6 +136,22 @@ Public, with secret scanning, push protection, and Dependabot alerts and securit
 is gitignored and has never been committed; `.fixtures/` likewise, because captured payloads are
 licensed market data and must not leave the machine that pulled them.
 
+## Dependency advisories
+
+Every advisory Dependabot has raised so far came from Prisma 7.10.0's own dependency tree, not from
+anything Conduit imports. `pnpm.overrides` in the root `package.json` forces the patched versions:
+
+| Package | Forced to | Reaches shipped code? |
+|---|---|---|
+| `lodash` | `^4.18.0` | no — Prisma Studio's charting (`@visx`) |
+| `mysql2` | `^3.23.1` | no — a driver Prisma bundles; Conduit is Postgres-only via `@prisma/adapter-pg` |
+| `deepmerge-ts` | `^8.0.0` | no — Prisma toolchain |
+| `esbuild` | `^0.28.1` | no — our own `tsup` / `vitest` build tooling |
+
+The overrides exist because "transitive and unreachable" is an argument for not panicking, not an
+argument for leaving a known-vulnerable version in the lockfile. Remove them when Prisma 8 ships and
+brings its own patched tree.
+
 ## Branch protection
 
 `main` requires the `ci` check and blocks force pushes. To reapply it, send a JSON body — the
