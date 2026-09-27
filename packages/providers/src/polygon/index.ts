@@ -14,6 +14,7 @@ import {
   type BackoffOptions,
   type CdmMessage,
   type HealthSnapshot,
+  type InstrumentSnapshot,
   type MarketMessage,
   type ProviderAdapter,
   type QuoteTick,
@@ -28,7 +29,11 @@ import { SequenceTracker, type SequenceScope } from '../sequence.js';
 import { parseJsonLossless } from '../json.js';
 import { ReconnectingSocket } from '../ws.js';
 import { SubscriptionRegistry } from '../subscriptions.js';
-import { normalizePolygonMessage, normalizePolygonSnapshot } from './normalize.js';
+import {
+  normalizePolygonMessage,
+  normalizePolygonSnapshot,
+  normalizePolygonSnapshotSummary,
+} from './normalize.js';
 
 const PROVIDER = 'polygon' as const;
 
@@ -146,9 +151,22 @@ class PolygonAdapter implements ProviderAdapter {
     // Reserve before the call, so a local refusal replaces a 429.
     await this.#options.usage?.acquire?.('rest', 1);
 
+    const body = await this.#fetchSnapshot(req.symbols);
+    const out: QuoteTick[] = [];
+    for (const entry of body.tickers ?? []) {
+      const quote = normalizePolygonSnapshot(entry, this.#normalizeOptions());
+      if (quote) out.push(quote);
+    }
+    this.#health.recordMessage(out.length);
+    this.#reportUsage('rest', 1, 'quote_l1');
+    return out;
+  }
+
+  /** The shared v2 snapshot request behind both snapshot() and summary(). */
+  async #fetchSnapshot(symbols: readonly string[]): Promise<{ tickers?: unknown[] }> {
     const base = this.#options.restBaseUrl ?? 'https://api.polygon.io';
     const url = new URL('/v2/snapshot/locale/us/markets/stocks/tickers', base);
-    url.searchParams.set('tickers', req.symbols.join(','));
+    url.searchParams.set('tickers', symbols.join(','));
     // The key goes in a header, never the query string, so it cannot leak into a log or a proxy.
     let res;
     try {
@@ -189,11 +207,20 @@ class PolygonAdapter implements ProviderAdapter {
 
     // Read as text and parse losslessly: lastQuote.t is a 19-digit nanosecond epoch, which
     // res.body.json() would round to the nearest double.
-    const body = parseJsonLossless(await res.body.text()) as { tickers?: unknown[] };
-    const out: QuoteTick[] = [];
+    return parseJsonLossless(await res.body.text()) as { tickers?: unknown[] };
+  }
+
+  /** Same v2 snapshot request as snapshot(), keeping the parts that call threw away. */
+  async summary(req: SnapshotRequest): Promise<InstrumentSnapshot[]> {
+    const assetClass = req.assetClass ?? 'equity';
+    this.#assertSupported('quote_l1', assetClass);
+    if (req.symbols.length === 0) return [];
+
+    const body = await this.#fetchSnapshot(req.symbols);
+    const out: InstrumentSnapshot[] = [];
     for (const entry of body.tickers ?? []) {
-      const quote = normalizePolygonSnapshot(entry, this.#normalizeOptions());
-      if (quote) out.push(quote);
+      const summary = normalizePolygonSnapshotSummary(entry, this.#normalizeOptions());
+      if (summary) out.push(summary);
     }
     this.#health.recordMessage(out.length);
     this.#reportUsage('rest', 1, 'quote_l1');

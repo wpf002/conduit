@@ -59,7 +59,7 @@ interface FakeFigi {
 }
 
 async function startFakeFigi(): Promise<FakeFigi> {
-  const state = {
+  const state: { status: number; respond: (body: unknown[]) => unknown[] } = {
     status: 200,
     respond: (body: unknown[]) =>
       body.map((job) => {
@@ -173,7 +173,7 @@ describe('OpenFigiClient', () => {
     const [matched, unmatched] = await client.map([{ symbol: 'AAPL' }, { symbol: 'NOPE1' }]);
     expect(matched!.kind).toBe('matched');
     expect(unmatched!.kind).toBe('unmatched');
-    expect(unmatched!.kind === 'unmatched' && unmatched.reason).toBe('No identifier found.');
+    expect(unmatched?.kind === 'unmatched' && unmatched.reason).toBe('No identifier found.');
   });
 
   it('keeps results aligned with the jobs that produced them', async () => {

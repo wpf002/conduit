@@ -152,7 +152,7 @@ mkpkg () {
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts --format esm --dts --watch",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run --passWithNoTests",
     "clean": "rm -rf dist .turbo"
   }
@@ -163,6 +163,15 @@ JSON
   "extends": "../../tsconfig.base.json",
   "compilerOptions": { "outDir": "dist", "rootDir": "src" },
   "include": ["src/**/*"]
+}
+JSON
+  # Tests need typechecking too. Without this, a test double can drift out of an interface it
+  # claims to implement and nothing notices, because vitest transpiles without checking types.
+  cat > "$dir/tsconfig.test.json" << 'JSON'
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "rootDir": ".", "noEmit": true },
+  "include": ["src/**/*", "test/**/*"]
 }
 JSON
   echo "export {};" > "$dir/src/index.ts"
@@ -186,7 +195,7 @@ cat > apps/cli/package.json << 'JSON'
   "scripts": {
     "build": "tsup src/index.ts --format esm --clean",
     "dev": "tsup src/index.ts --format esm --watch",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run --passWithNoTests",
     "clean": "rm -rf dist .turbo"
   }

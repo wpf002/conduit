@@ -13,6 +13,7 @@ import {
   type AssetClass,
   type CdmMessage,
   type HealthSnapshot,
+  type InstrumentSnapshot,
   type ProviderAdapter,
   type QuoteTick,
   type Schema,
@@ -118,6 +119,17 @@ class DatabentoAdapter implements ProviderAdapter {
         'databento historical has no snapshot endpoint; use stream() with a replay window',
         { provider: PROVIDER, schema: 'quote_l1', ...(req.assetClass ? { assetClass: req.assetClass } : {}) },
       ),
+    );
+  }
+
+  /** No snapshot endpoint, so there is nothing honest to return. */
+  summary(req: SnapshotRequest): Promise<InstrumentSnapshot[]> {
+    return Promise.reject(
+      new CoverageError('databento historical has no snapshot endpoint; use stream() with a replay window', {
+        provider: PROVIDER,
+        schema: 'quote_l1',
+        ...(req.assetClass ? { assetClass: req.assetClass } : {}),
+      }),
     );
   }
 

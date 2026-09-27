@@ -5,6 +5,7 @@ import {
   UNRESOLVED_FIGI,
   nowNs,
   type Bar,
+  type InstrumentSnapshot,
   type MarketMessage,
   type QuoteTick,
   type TradeTick,
@@ -167,6 +168,71 @@ export function normalizePolygonMessage(
     default:
       return undefined;
   }
+}
+
+/**
+ * v2 snapshot payload for one ticker to an InstrumentSnapshot. The response already carries
+ * lastTrade, day, prevDay and min; only lastQuote was being used.
+ */
+export function normalizePolygonSnapshotSummary(
+  entry: unknown,
+  options: PolygonNormalizeOptions = {},
+): InstrumentSnapshot | undefined {
+  if (typeof entry !== 'object' || entry === null) return undefined;
+  const t = entry as Record<string, unknown>;
+  const symbol = str(t['ticker'], 'ticker');
+
+  const obj = (key: string): Record<string, unknown> | undefined => {
+    const value = t[key];
+    return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : undefined;
+  };
+  const optNum = (source: Record<string, unknown> | undefined, key: string): number | undefined => {
+    const value = source?.[key];
+    return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+  };
+
+  const lastTrade = obj('lastTrade');
+  const lastQuote = obj('lastQuote');
+  const day = obj('day');
+  const prevDay = obj('prevDay');
+  const quoteMultiplier = options.quoteSizeUnits === 'lots' ? LOT_SIZE : 1;
+
+  const eventTime = lastTrade?.['t'] ?? lastQuote?.['t'];
+  if (eventTime === undefined) return undefined;
+
+  return {
+    kind: 'snapshot',
+    figi: (options.resolveFigi ?? (() => UNRESOLVED_FIGI))(symbol),
+    symbol,
+    provider: PROVIDER,
+    tsEvent: ts(eventTime, 'lastTrade.t'),
+    tsConduitRecv: nowNs(),
+    flags: CdmFlags.Snapshot,
+    ...(optNum(lastTrade, 'p') === undefined ? {} : { lastPx: optNum(lastTrade, 'p')! }),
+    ...(optNum(lastTrade, 's') === undefined ? {} : { lastSz: optNum(lastTrade, 's')! }),
+    ...(optNum(lastQuote, 'p') === undefined ? {} : { bidPx: optNum(lastQuote, 'p')! }),
+    ...(optNum(lastQuote, 'P') === undefined ? {} : { askPx: optNum(lastQuote, 'P')! }),
+    ...(optNum(lastQuote, 's') === undefined
+      ? {}
+      : { bidSz: optNum(lastQuote, 's')! * quoteMultiplier }),
+    ...(optNum(lastQuote, 'S') === undefined
+      ? {}
+      : { askSz: optNum(lastQuote, 'S')! * quoteMultiplier }),
+    ...(day
+      ? {
+          day: {
+            open: optNum(day, 'o') ?? 0,
+            high: optNum(day, 'h') ?? 0,
+            low: optNum(day, 'l') ?? 0,
+            close: optNum(day, 'c') ?? 0,
+            volume: optNum(day, 'v') ?? 0,
+            ...(optNum(day, 'vw') === undefined ? {} : { vwap: optNum(day, 'vw')! }),
+          },
+        }
+      : {}),
+    ...(optNum(prevDay, 'c') === undefined ? {} : { prevClose: optNum(prevDay, 'c')! }),
+    ...(options.includeRaw === false ? {} : { raw: entry }),
+  };
 }
 
 /** v2 snapshot payload for one ticker to a QuoteTick. */

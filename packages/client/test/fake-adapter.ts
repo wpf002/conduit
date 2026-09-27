@@ -5,6 +5,7 @@ import {
   type AssetClass,
   type CdmMessage,
   type HealthSnapshot,
+  type InstrumentSnapshot,
   type ProviderAdapter,
   type ProviderId,
   type QuoteTick,
@@ -81,6 +82,27 @@ export class FakeAdapter implements ProviderAdapter {
     this.#health.recordMessage(req.symbols.length);
     const ageNs = BigInt(this.#options.snapshotAgeMs ?? 0) * 1_000_000n;
     return req.symbols.map((symbol) => this.quote(symbol, nowNs() - ageNs));
+  }
+
+  async summary(req: SnapshotRequest): Promise<InstrumentSnapshot[]> {
+    this.snapshotCalls += 1;
+    if (this.#options.snapshotError) {
+      this.#health.recordFailure(this.#options.snapshotError);
+      throw this.#options.snapshotError;
+    }
+    const ageNs = BigInt(this.#options.snapshotAgeMs ?? 0) * 1_000_000n;
+    return req.symbols.map((symbol) => ({
+      kind: 'snapshot' as const,
+      figi: UNRESOLVED_FIGI,
+      symbol,
+      provider: this.id,
+      tsEvent: nowNs() - ageNs,
+      tsConduitRecv: nowNs(),
+      lastPx: 100,
+      bidPx: 100,
+      askPx: 100.01,
+      prevClose: 99,
+    }));
   }
 
   stream(req: StreamRequest): AsyncIterable<CdmMessage> {

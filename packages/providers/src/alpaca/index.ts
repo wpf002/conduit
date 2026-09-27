@@ -15,6 +15,7 @@ import {
   type BackoffOptions,
   type CdmMessage,
   type HealthSnapshot,
+  type InstrumentSnapshot,
   type MarketMessage,
   type ProviderAdapter,
   type QuoteTick,
@@ -28,7 +29,7 @@ import { ConsumerSet } from '../fanout.js';
 import { ReconnectingSocket } from '../ws.js';
 import { SubscriptionRegistry } from '../subscriptions.js';
 import { parseJsonLossless } from '../json.js';
-import { normalizeAlpacaMessage } from './normalize.js';
+import { normalizeAlpacaMessage, normalizeAlpacaSnapshot } from './normalize.js';
 
 const PROVIDER = 'alpaca' as const;
 
@@ -248,6 +249,71 @@ class AlpacaAdapter implements ProviderAdapter {
         this.#normalizeOptions(),
       );
       if (normalized && normalized.kind === 'quote') out.push(normalized);
+    }
+    this.#health.recordMessage(out.length);
+    this.#reportUsage('rest', 1, 'quote_l1');
+    return out;
+  }
+
+  /**
+   * One request for many symbols via /v2/stocks/snapshots, which returns last trade, last quote,
+   * today's bar and the previous day's close together — the shape a dashboard actually asks for.
+   */
+  async summary(req: SnapshotRequest): Promise<InstrumentSnapshot[]> {
+    const assetClass = req.assetClass ?? 'equity';
+    this.#assertSupported('quote_l1', assetClass);
+    if (req.symbols.length === 0) return [];
+
+    await this.#options.usage?.acquire?.('rest', 1);
+    const base = this.#options.restBaseUrl ?? 'https://data.alpaca.markets';
+    const url = new URL('/v2/stocks/snapshots', base);
+    url.searchParams.set('symbols', req.symbols.join(','));
+    url.searchParams.set('feed', this.#options.feed ?? 'iex');
+
+    let res;
+    try {
+      res = await request(url, {
+        method: 'GET',
+        headers: {
+          'APCA-API-KEY-ID': this.#options.keyId,
+          'APCA-API-SECRET-KEY': this.#options.secret,
+          Accept: 'application/json',
+        },
+      });
+    } catch (error) {
+      const err = new TransportError(
+        `alpaca snapshots request failed: ${redact(error instanceof Error ? error.message : String(error))}`,
+        { provider: PROVIDER, cause: error },
+      );
+      this.#health.recordFailure(err);
+      throw err;
+    }
+
+    if (res.statusCode === 401 || res.statusCode === 403) {
+      const err = new AuthError('alpaca rejected the credentials on snapshots', {
+        provider: PROVIDER,
+      });
+      this.#health.recordFailure(err);
+      throw err;
+    }
+    if (res.statusCode === 429) {
+      const err = new RateLimitError('alpaca snapshots rate limited', { provider: PROVIDER });
+      this.#health.recordFailure(err);
+      throw err;
+    }
+    if (res.statusCode >= 400) {
+      const err = new TransportError(`alpaca snapshots HTTP ${res.statusCode}`, {
+        provider: PROVIDER,
+      });
+      this.#health.recordFailure(err);
+      throw err;
+    }
+
+    const body = parseJsonLossless(await res.body.text()) as Record<string, unknown>;
+    const out: InstrumentSnapshot[] = [];
+    for (const [symbol, payload] of Object.entries(body)) {
+      const snapshot = normalizeAlpacaSnapshot(payload, symbol, this.#normalizeOptions());
+      if (snapshot) out.push(snapshot);
     }
     this.#health.recordMessage(out.length);
     this.#reportUsage('rest', 1, 'quote_l1');

@@ -63,6 +63,11 @@ export function clearVenueMaps(): void {
  */
 export function venueCode(code: unknown): string | undefined {
   if (typeof code === 'number' && Number.isFinite(code)) return String(code);
-  if (typeof code === 'string' && code.length > 0) return code;
+  if (typeof code === 'string') {
+    // Alpaca sends a single space for the venue on an empty book side, which a length check treats
+    // as a code. Observed on a real closed-market quote: {"ap":0,"as":0,"ax":" "}.
+    const trimmed = code.trim();
+    if (trimmed.length > 0) return trimmed;
+  }
   return undefined;
 }

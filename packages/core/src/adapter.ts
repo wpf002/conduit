@@ -1,4 +1,4 @@
-import type { CdmMessage, MarketMessage, QuoteTick } from './cdm.js';
+import type { CdmMessage, InstrumentSnapshot, MarketMessage, QuoteTick } from './cdm.js';
 import type { AssetClass, ProviderId, Schema } from './ids.js';
 
 /**
@@ -52,6 +52,11 @@ export interface ProviderAdapter {
   health(): HealthSnapshot;
   supports(schema: Schema, assetClass: AssetClass): boolean;
   snapshot(req: SnapshotRequest): Promise<QuoteTick[]>;
+  /**
+   * One request per call for a point-in-time summary: last trade, quote, today's aggregates and the
+   * previous close. Adapters without a snapshot endpoint throw CoverageError.
+   */
+  summary(req: SnapshotRequest): Promise<InstrumentSnapshot[]>;
   stream(req: StreamRequest): AsyncIterable<CdmMessage>;
   close(): Promise<void>;
 }

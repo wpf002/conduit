@@ -7,9 +7,12 @@ import {
   isControl,
   isQuote,
   type CdmMessage,
+  type LogRecord,
+  type UsageRecord,
+  type MarketMessage,
   type ProviderAdapter,
 } from '@conduit/core';
-import { polygon } from '../src/polygon/index.js';
+import { polygon, type PolygonOptions } from '../src/polygon/index.js';
 
 /**
  * Phase 1 acceptance test. A local websocket server stands in for Polygon so there is no live
@@ -113,7 +116,7 @@ afterEach(async () => {
   fake = undefined;
 });
 
-function connect(overrides: Record<string, unknown> = {}): ProviderAdapter {
+function connect(overrides: Partial<PolygonOptions> = {}): ProviderAdapter {
   return polygon({
     apiKey: 'test-key-01234567890',
     wsUrl: fake!.url,
@@ -168,7 +171,7 @@ describe('polygon stream', () => {
 
     await waitFor(() => fake!.subscribeFrames.length > 0);
     fake.send(quotePayload('AAPL', 0));
-    expect(((await iterator.next()).value as CdmMessage).symbol).toBe('AAPL');
+    expect((((await iterator.next()).value as MarketMessage)).symbol).toBe('AAPL');
 
     const startedAt = Date.now();
     fake.killActiveConnection();
@@ -180,7 +183,7 @@ describe('polygon stream', () => {
 
     // The consumer's iterator was never dropped: the next message arrives on it.
     fake.send(quotePayload('MSFT', 5), 1);
-    const afterReconnect = (await iterator.next()).value as CdmMessage;
+    const afterReconnect = (await iterator.next()).value as MarketMessage;
     expect(afterReconnect.symbol).toBe('MSFT');
     expect(Date.now() - startedAt).toBeLessThan(5_000);
     expect(adapter.health().reconnectCount).toBe(1);
@@ -324,9 +327,9 @@ describe('polygon coverage', () => {
 describe('usage accounting', () => {
   it('reports subscribes and messages through the usage sink', async () => {
     fake = await startFakePolygon();
-    const records: { kind: string; count: number; schema?: string }[] = [];
+    const records: UsageRecord[] = [];
     adapter = connect({
-      usage: { sink: (r: { kind: string; count: number; schema?: string }) => records.push(r) },
+      usage: { sink: (r) => records.push(r) },
     });
     const iterator = adapter.stream({ symbols: ['AAPL', 'MSFT'], schema: 'quote_l1' })[
       Symbol.asyncIterator
@@ -482,7 +485,7 @@ describe('diagnostics', () => {
   it('logs the socket lifecycle and never the key', async () => {
     fake = await startFakePolygon();
     const records: { level: string; msg: string; fields?: Record<string, unknown> }[] = [];
-    adapter = connect({ logger: (r) => records.push(r), logLevel: 'debug' });
+    adapter = connect({ logger: (r: LogRecord) => records.push(r), logLevel: 'debug' });
     const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
       Symbol.asyncIterator
     ]();
@@ -499,7 +502,7 @@ describe('diagnostics', () => {
   it('logs a reconnect with the attempt and delay', async () => {
     fake = await startFakePolygon();
     const records: { level: string; msg: string; fields?: Record<string, unknown> }[] = [];
-    adapter = connect({ logger: (r) => records.push(r) });
+    adapter = connect({ logger: (r: LogRecord) => records.push(r) });
     const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
       Symbol.asyncIterator
     ]();
@@ -517,7 +520,7 @@ describe('diagnostics', () => {
     fake = await startFakePolygon();
     fake.authMode = 'failed';
     const records: { level: string; msg: string }[] = [];
-    adapter = connect({ logger: (r) => records.push(r) });
+    adapter = connect({ logger: (r: LogRecord) => records.push(r) });
     try {
       for await (const _ of adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })) {
         /* unreachable */

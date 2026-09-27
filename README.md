@@ -267,6 +267,25 @@ matches what you subscribed to; `packages/providers/src/sequence.ts` explains th
 It is explicitly not cost minimization. Cost routing only paid off under subscription pooling, and
 pooling is the part the licences prohibit.
 
+## Snapshots
+
+`summary()` is one request for what a price row actually needs — last trade, current quote, today's
+aggregates and the previous session's close:
+
+```ts
+const [aapl] = await conduit.summary({ symbols: ['AAPL'] });
+aapl.lastPx;          // 341.02
+aapl.prevClose;       // 335.88
+aapl.day?.volume;     // 842202
+aapl.lastPx - aapl.prevClose;   // the change, which you compute
+```
+
+`change` is deliberately absent. It is a subtraction, and an adapter reporting it would be reporting
+a number the venue never sent.
+
+Polygon and Alpaca serve this from one endpoint each. Databento and Tiingo have no snapshot endpoint
+and throw `CoverageError`.
+
 ## Reference data
 
 Neither Massive nor Alpaca publishes its venue or condition-code table outside an authenticated

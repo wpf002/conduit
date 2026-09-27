@@ -10,6 +10,7 @@ import {
   type AssetClass,
   type CdmMessage,
   type HealthSnapshot,
+  type InstrumentSnapshot,
   type ProviderAdapter,
   type ProviderId,
   type QuoteTick,
@@ -85,6 +86,19 @@ class ProbeAdapter implements ProviderAdapter {
       bidSz: 100,
       askPx: 100.01,
       askSz: 100,
+    }));
+  }
+
+  async summary(req: SnapshotRequest): Promise<InstrumentSnapshot[]> {
+    const ageNs = BigInt(this.#options.snapshotAgeMs ?? 0) * 1_000_000n;
+    return req.symbols.map((symbol) => ({
+      kind: 'snapshot' as const,
+      figi: UNRESOLVED_FIGI,
+      symbol,
+      provider: this.id,
+      tsEvent: nowNs() - ageNs,
+      tsConduitRecv: nowNs(),
+      lastPx: 100,
     }));
   }
 

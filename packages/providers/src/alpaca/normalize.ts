@@ -1,10 +1,12 @@
 import {
+  CdmFlags,
   SchemaError,
   UNRESOLVED_FIGI,
   isoToNs,
   nowNs,
   NS_PER_MS,
   type Bar,
+  type InstrumentSnapshot,
   type MarketMessage,
   type QuoteTick,
   type TradeTick,
@@ -58,6 +60,77 @@ function ts(value: unknown, field: string): bigint {
       cause: error,
     });
   }
+}
+
+/**
+ * Alpaca's /v2/stocks/{symbol}/snapshot response to an InstrumentSnapshot.
+ *
+ * Shape verified against the live endpoint on 2026-09-27: dailyBar, latestQuote, latestTrade,
+ * minuteBar, prevDailyBar and symbol, with bars as {o,h,l,c,v,n,vw,t} and RFC-3339 timestamps
+ * carrying eight or nine fractional digits.
+ */
+export function normalizeAlpacaSnapshot(
+  payload: unknown,
+  symbol: string,
+  options: AlpacaNormalizeOptions = {},
+): InstrumentSnapshot | undefined {
+  if (typeof payload !== 'object' || payload === null) return undefined;
+  const record = payload as Record<string, unknown>;
+
+  const obj = (key: string): Record<string, unknown> | undefined => {
+    const value = record[key];
+    return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : undefined;
+  };
+  const optNum = (source: Record<string, unknown> | undefined, key: string): number | undefined => {
+    const value = source?.[key];
+    return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+  };
+
+  const latestTrade = obj('latestTrade');
+  const latestQuote = obj('latestQuote');
+  const dailyBar = obj('dailyBar');
+  const prevDailyBar = obj('prevDailyBar');
+  const quoteMultiplier = (options.quoteSizeUnits ?? 'lots') === 'lots' ? LOT_SIZE : 1;
+
+  // The event time is the freshest thing in the payload: the last trade, else the last quote.
+  const eventSource = latestTrade?.['t'] ?? latestQuote?.['t'] ?? dailyBar?.['t'];
+  if (typeof eventSource !== 'string') return undefined;
+
+  const day = dailyBar
+    ? {
+        open: optNum(dailyBar, 'o') ?? 0,
+        high: optNum(dailyBar, 'h') ?? 0,
+        low: optNum(dailyBar, 'l') ?? 0,
+        close: optNum(dailyBar, 'c') ?? 0,
+        volume: optNum(dailyBar, 'v') ?? 0,
+        ...(optNum(dailyBar, 'vw') === undefined ? {} : { vwap: optNum(dailyBar, 'vw')! }),
+        ...(optNum(dailyBar, 'n') === undefined ? {} : { trades: optNum(dailyBar, 'n')! }),
+      }
+    : undefined;
+
+  const bidPx = optNum(latestQuote, 'bp');
+  const askPx = optNum(latestQuote, 'ap');
+  const bidSz = optNum(latestQuote, 'bs');
+  const askSz = optNum(latestQuote, 'as');
+
+  return {
+    kind: 'snapshot',
+    figi: (options.resolveFigi ?? (() => UNRESOLVED_FIGI))(symbol),
+    symbol,
+    provider: PROVIDER,
+    tsEvent: ts(eventSource, 'latestTrade.t'),
+    tsConduitRecv: nowNs(),
+    flags: CdmFlags.Snapshot,
+    ...(optNum(latestTrade, 'p') === undefined ? {} : { lastPx: optNum(latestTrade, 'p')! }),
+    ...(optNum(latestTrade, 's') === undefined ? {} : { lastSz: optNum(latestTrade, 's')! }),
+    ...(bidPx === undefined ? {} : { bidPx }),
+    ...(askPx === undefined ? {} : { askPx }),
+    ...(bidSz === undefined ? {} : { bidSz: bidSz * quoteMultiplier }),
+    ...(askSz === undefined ? {} : { askSz: askSz * quoteMultiplier }),
+    ...(day ? { day } : {}),
+    ...(optNum(prevDailyBar, 'c') === undefined ? {} : { prevClose: optNum(prevDailyBar, 'c')! }),
+    ...(options.includeRaw === false ? {} : { raw: payload }),
+  };
 }
 
 /**

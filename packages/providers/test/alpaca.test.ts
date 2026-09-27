@@ -10,6 +10,7 @@ import {
   assertCdmInvariants,
   hasFlag,
   isBar,
+  isMarketMessage,
   isQuote,
   isTrade,
   nsToIso,
@@ -220,7 +221,7 @@ describe('alpaca stream', () => {
     // Still live: a rate limit is a health signal, not a terminal state.
     fake.send(payloads[3]);
     const quote = (await iterator.next()).value as CdmMessage;
-    expect(quote.symbol).toBe('AAPL');
+    expect(isMarketMessage(quote) && quote.symbol).toBe('AAPL');
     await iterator.return?.();
   });
 
