@@ -12,6 +12,18 @@ import { canonicalKey, toProviderSymbol } from './variants.js';
 
 export interface ResolverOptions {
   readonly store?: SymbologyStore;
+  /**
+   * OpenFIGI exchange filter applied to every lookup. Defaults to `'US'`.
+   *
+   * Without it, OpenFIGI answers globally and a US ticker resolves to whatever instrument anywhere in
+   * the world matches first. Verified against the live service on 2026-09-26: `FB` came back as
+   * FEDERAL BANK LTD in India, `SQ` as SAHAKOL EQUIPMENT in Thailand, and `GOOGL` as an Argentine
+   * CEDEAR rather than the US listing. Every one of those is a plausible-looking instrument that is
+   * silently the wrong company.
+   *
+   * Set to `null` to search globally, which is only right if you genuinely trade outside the US.
+   */
+  readonly exchCode?: string | null;
   /** Omitted means cache-only: nothing is resolved that is not already known. */
   readonly openFigi?: OpenFigiClient;
   /** How long an unresolvable symbol stays negatively cached. */
@@ -27,12 +39,13 @@ export interface ResolverOptions {
 
 export interface ResolveOptions {
   readonly provider?: ProviderId;
+  /** Overrides the resolver's exchange filter for this call. null searches globally. */
+  readonly exchCode?: string | null;
   /** Skips the store and the negative cache and asks the vendor. Used by the nightly refresh. */
   readonly force?: boolean;
   /** Defaults to now. A past date is resolved from the store only. */
   readonly asOf?: Date;
   readonly assetClass?: AssetClass;
-  readonly exchCode?: string;
   readonly currency?: string;
 }
 
@@ -87,6 +100,7 @@ export class SymbologyResolver {
   #openFigi: OpenFigiClient | undefined;
   #negativeTtlMs: number;
   #historicalCutoffMs: number;
+  #exchCode: string | undefined;
   #now: () => Date;
 
   /** Synchronous cache the adapters read through their resolveFigi hook. */
@@ -105,6 +119,7 @@ export class SymbologyResolver {
     this.#openFigi = options.openFigi;
     this.#negativeTtlMs = options.negativeTtlMs ?? 6 * 60 * 60 * 1000;
     this.#historicalCutoffMs = options.historicalCutoffMs ?? DAY_MS;
+    this.#exchCode = options.exchCode === null ? undefined : (options.exchCode ?? 'US');
     this.#now = options.now ?? (() => new Date());
   }
 
@@ -221,10 +236,12 @@ export class SymbologyResolver {
     }
 
     if (toLookUp.length > 0 && this.#openFigi) {
+      // A per-call exchCode overrides the resolver's default; null on the call searches globally.
+      const exchCode = options.exchCode === null ? undefined : (options.exchCode ?? this.#exchCode);
       const jobs: OpenFigiJob[] = toLookUp.map((symbol) => ({
         symbol,
         assetClass,
-        ...(options.exchCode ? { exchCode: options.exchCode } : {}),
+        ...(exchCode ? { exchCode } : {}),
         ...(options.currency ? { currency: options.currency } : {}),
       }));
       const results = await this.#openFigi.map(jobs);

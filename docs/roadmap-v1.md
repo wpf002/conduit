@@ -24,7 +24,14 @@ Unchanged from the build roadmap, and worth restating because scope creep here i
 
 ## M1 — Conformance against primary sources
 
-**Status: largely done without a key. See [conformance.md](conformance.md).**
+**Status: closed. The residual is a stated limitation, not an open milestone.**
+
+Everything reachable without credentials has been done, including a live probe of all four providers'
+rejection paths and full verification of symbology against the real OpenFIGI service. What remains
+needs one API key, is recorded once in the README under "Known limitation", and is not tracked here
+any more. It is not a blocker for M2 through M5 and will not be raised again until a key exists.
+
+See [conformance.md](conformance.md) for what was checked and how.
 
 The original form of this milestone required a live provider and blocked everything behind it. That
 was wrong: most of what live testing gives you is knowledge of the wire format, and the vendors

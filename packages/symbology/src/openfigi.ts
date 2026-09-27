@@ -45,13 +45,6 @@ export type OpenFigiResult =
   | { readonly kind: 'matched'; readonly job: OpenFigiJob; readonly matches: OpenFigiMatch[] }
   | { readonly kind: 'unmatched'; readonly job: OpenFigiJob; readonly reason: string };
 
-const SECURITY_TYPE: Readonly<Partial<Record<AssetClass, string>>> = {
-  equity: 'Common Stock',
-  etf: 'ETP',
-  future: 'Future',
-  option: 'Option',
-};
-
 /**
  * A token bucket over a sliding minute. OpenFIGI answers 429 rather than queueing, so the limit is
  * enforced here instead of discovered.
@@ -142,9 +135,6 @@ export class OpenFigiClient {
       ...(job.exchCode ? { exchCode: job.exchCode } : {}),
       ...(job.micCode ? { micCode: job.micCode } : {}),
       ...(job.currency ? { currency: job.currency } : {}),
-      ...(job.assetClass && SECURITY_TYPE[job.assetClass]
-        ? { securityType2: job.assetClass === 'etf' ? 'ETP' : undefined }
-        : {}),
     }));
 
     let res;

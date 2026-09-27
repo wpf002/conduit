@@ -165,6 +165,19 @@ new UsageLedger({ costModel: { perUnit: { polygon: { rest: 2_000 } } } });
 
 Ledger data is written to the user's local Postgres and never transmitted.
 
+## Known limitation
+
+**Conduit has never successfully authenticated to a market data provider.** Its failure paths are
+verified against the live endpoints — wrong-key rejection for all four providers, correct URLs, auth
+frame formats and error mapping — and symbology is verified against the real OpenFIGI service. The
+success path is not: no valid auth, no subscribe acknowledgement, no real message on the wire, no
+reconnect mid-session. Every normalizer test replays fixtures written from vendor documentation and
+vendor SDK source.
+
+Closing this needs one API key. Alpaca's Basic plan is free and covers quotes, trades and bars; two
+values in `.env` and `conduit doctor` settles it. Until then this section is the disclosure, and it
+is not repeated elsewhere.
+
 ## Status
 
 | Phase | State |

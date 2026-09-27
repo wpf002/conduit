@@ -1,0 +1,175 @@
+{
+  "note": "Captured from the live OpenFIGI v3 mapping API, unkeyed, with exchCode US. Real FIGIs.",
+  "capturedAt": "2026-09-27",
+  "exchCode": "US",
+  "rows": [
+    {
+      "symbol": "AAPL",
+      "why": "plain",
+      "figi": "BBG000B9XRY4",
+      "ticker": "AAPL",
+      "name": "APPLE INC"
+    },
+    {
+      "symbol": "MSFT",
+      "why": "plain",
+      "figi": "BBG000BPH459",
+      "ticker": "MSFT",
+      "name": "MICROSOFT CORP"
+    },
+    {
+      "symbol": "NVDA",
+      "why": "plain",
+      "figi": "BBG000BBJQV0",
+      "ticker": "NVDA",
+      "name": "NVIDIA CORP"
+    },
+    {
+      "symbol": "JPM",
+      "why": "plain",
+      "figi": "BBG000DMBXR2",
+      "ticker": "JPM",
+      "name": "JPMORGAN CHASE & CO"
+    },
+    {
+      "symbol": "XOM",
+      "why": "plain",
+      "figi": "BBG023CY9MM1",
+      "ticker": "XOM",
+      "name": "EXXONMOBIL HOLDINGS CORP"
+    },
+    {
+      "symbol": "SPY",
+      "why": "etf",
+      "figi": "BBG000BDTBL9",
+      "ticker": "SPY",
+      "name": "SS SPDR S&P 500 ETF TRUST-US"
+    },
+    {
+      "symbol": "QQQ",
+      "why": "etf",
+      "figi": "BBG000BSWKH7",
+      "ticker": "QQQ",
+      "name": "INVESCO QQQ TRUST SERIES 1"
+    },
+    {
+      "symbol": "IWM",
+      "why": "etf",
+      "figi": "BBG000CGC9C4",
+      "ticker": "IWM",
+      "name": "ISHARES RUSSELL 2000 ETF"
+    },
+    {
+      "symbol": "GLD",
+      "why": "etf",
+      "figi": "BBG000CRF6Q8",
+      "ticker": "GLD",
+      "name": "SPDR GOLD SHARES"
+    },
+    {
+      "symbol": "BRK.B",
+      "why": "class share",
+      "figi": "BBG000DWG505",
+      "ticker": "BRK/B",
+      "name": "BERKSHIRE HATHAWAY INC-CL B"
+    },
+    {
+      "symbol": "BRK.A",
+      "why": "class share",
+      "figi": "BBG000DWCFL4",
+      "ticker": "BRK/A",
+      "name": "BERKSHIRE HATHAWAY INC-CL A"
+    },
+    {
+      "symbol": "BF.B",
+      "why": "class share",
+      "figi": "BBG000BD2NY8",
+      "ticker": "BF/B",
+      "name": "BROWN-FORMAN CORP-CLASS B"
+    },
+    {
+      "symbol": "GOOG",
+      "why": "class share",
+      "figi": "BBG009S3NB30",
+      "ticker": "GOOG",
+      "name": "ALPHABET INC-CL C"
+    },
+    {
+      "symbol": "GOOGL",
+      "why": "class share",
+      "figi": "BBG009S39JX6",
+      "ticker": "GOOGL",
+      "name": "ALPHABET INC-CL A"
+    },
+    {
+      "symbol": "HEI.A",
+      "why": "class share",
+      "figi": "BBG000F0CD91",
+      "ticker": "HEI/A",
+      "name": "HEICO CORP-CLASS A"
+    },
+    {
+      "symbol": "META",
+      "why": "renamed",
+      "figi": "BBG000MM2P62",
+      "ticker": "META",
+      "name": "META PLATFORMS INC-CLASS A"
+    },
+    {
+      "symbol": "XYZ",
+      "why": "renamed",
+      "figi": "BBG0018SLC07",
+      "ticker": "XYZ",
+      "name": "BLOCK INC"
+    },
+    {
+      "symbol": "FB",
+      "why": "freed ticker",
+      "figi": "BBG01VRMNFB1",
+      "ticker": "FB",
+      "name": "PROSHARES S&P DYNAMIC BUFFER"
+    },
+    {
+      "symbol": "SQ",
+      "why": "freed ticker",
+      "figi": null,
+      "ticker": null,
+      "name": null
+    },
+    {
+      "symbol": "TWTR",
+      "why": "delisted",
+      "figi": null,
+      "ticker": null,
+      "name": null
+    },
+    {
+      "symbol": "CBRE",
+      "why": "reused",
+      "figi": "BBG000C04224",
+      "ticker": "CBRE",
+      "name": "CBRE GROUP INC - A"
+    },
+    {
+      "symbol": "BABA",
+      "why": "adr",
+      "figi": "BBG006G2JVL2",
+      "ticker": "BABA",
+      "name": "ALIBABA GROUP HOLDING-SP ADR"
+    },
+    {
+      "symbol": "TSM",
+      "why": "adr",
+      "figi": "BBG000BD8ZK0",
+      "ticker": "TSM",
+      "name": "TAIWAN SEMICONDUCTOR-SP ADR"
+    },
+    {
+      "symbol": "NOSUCHTICKERXYZ",
+      "why": "unresolvable",
+      "figi": null,
+      "ticker": null,
+      "name": null
+    }
+  ]
+}
