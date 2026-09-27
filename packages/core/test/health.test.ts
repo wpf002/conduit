@@ -21,6 +21,21 @@ describe('HealthTracker', () => {
     expect(t.snapshot().state).toBe('degraded');
   });
 
+  it('is healthy for a request-only provider that answered, with no socket involved', () => {
+    // Databento and Tiingo never open a socket, and so does the REST path of the others. Calling
+    // that 'down' reports an outage that is not happening.
+    const t = tracker();
+    t.recordMessage(3);
+    expect(t.snapshot().state).toBe('healthy');
+  });
+
+  it('is degraded for a request-only provider that answered and then failed', () => {
+    const t = tracker();
+    t.recordMessage();
+    t.recordFailure(new TransportError('429'));
+    expect(t.snapshot().state).toBe('degraded');
+  });
+
   it('is down after a connection is lost, not unknown', () => {
     const t = tracker();
     t.recordConnected();

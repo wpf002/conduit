@@ -3,6 +3,7 @@ import {
   isConduitError,
   type AssetClass,
   type HealthSnapshot,
+  type InstrumentSnapshot,
   type ProviderAdapter,
   type ProviderId,
   type QuoteTick,
@@ -100,6 +101,40 @@ export class ConduitClient {
       }
     }
     throw new CoverageError(`every covering provider failed the snapshot. ${failures.join('; ')}`, {
+      schema: query.schema,
+      assetClass,
+    });
+  }
+
+  /**
+   * A price summary from the first covering provider that answers. Same fall-through as snapshot():
+   * one extra request on failure rather than a duplicate subscription.
+   */
+  async summary(
+    request: SnapshotRequest & { readonly schema?: Schema },
+  ): Promise<InstrumentSnapshot[]> {
+    if (this.#closed) throw new CoverageError('ConduitClient is closed');
+    const assetClass = request.assetClass ?? 'equity';
+    const query = {
+      schema: request.schema ?? ('quote_l1' as Schema),
+      assetClass,
+      symbols: request.symbols,
+    };
+    const candidates = coveringProviders(this.#config, query);
+    assertCoverage(this.#config, query, candidates);
+
+    const failures: string[] = [];
+    for (const adapter of candidates) {
+      try {
+        return await adapter.summary({
+          symbols: request.symbols,
+          ...(request.assetClass ? { assetClass: request.assetClass } : {}),
+        });
+      } catch (error) {
+        failures.push(`${adapter.id}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+    throw new CoverageError(`every covering provider failed the summary. ${failures.join('; ')}`, {
       schema: query.schema,
       assetClass,
     });

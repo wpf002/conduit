@@ -1,0 +1,23 @@
+{
+  "name": "@conduit/bridge",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Conduit as a subprocess, over newline-delimited JSON, for non-TypeScript consumers",
+  "type": "module",
+  "bin": {
+    "conduit-bridge": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --clean",
+    "dev": "tsup src/index.ts --format esm --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run --passWithNoTests",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@conduit/client": "workspace:^",
+    "@conduit/core": "workspace:^",
+    "@conduit/providers": "workspace:^",
+    "dotenv": "^18.0.3"
+  }
+}

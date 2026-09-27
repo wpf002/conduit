@@ -557,6 +557,29 @@ describe('market-closed hours', () => {
     await sink.done;
   });
 
+  it('does not mistake its own probe for a standby going live', async () => {
+    // The probe calls snapshot() on the standby, which updates that standby's health. An earlier
+    // version then read that as "the standby just received a message" and switched to it, every tick.
+    const polygon = new FakeAdapter('polygon', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    const alpaca = new FakeAdapter('alpaca', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
+    const client = new ConduitClient({
+      providers: [polygon, alpaca],
+      failover: { ...FAST, staleAfterMs: 80 },
+    });
+    const sub = await client.subscribe({ symbols: ['AAPL'], schema: 'quote_l1' });
+    const sink = collect(sub);
+
+    polygon.emitQuote('AAPL', T0);
+    await waitFor(() => sink.messages.length === 1);
+    await new Promise((r) => setTimeout(r, 500));
+    expect(alpaca.snapshotCalls).toBeGreaterThan(0);
+    expect(sub.switchCount).toBe(0);
+
+    await sub.close();
+    await client.close();
+    await sink.done;
+  });
+
   it('switches when a standby proves the market is trading', async () => {
     const polygon = new FakeAdapter('polygon', { staleAfterMs: 80, snapshotAgeMs: 600_000 });
     // Alpaca's snapshot is current, so something is printing and polygon's socket is the problem.
