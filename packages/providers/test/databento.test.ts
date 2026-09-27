@@ -10,6 +10,7 @@ import {
   dateToNs,
   hasFlag,
   isDepth,
+  isMarketMessage,
   isQuote,
   type CdmMessage,
   type ProviderAdapter,
@@ -94,7 +95,7 @@ describe('the other JSON encoding', () => {
 
   it('reads a decimal price string without scaling it', () => {
     const trade = normalizeDatabentoRecord(PRETTY, 'trades');
-    expect(trade!.kind === 'trade' && trade.px).toBe(185.115);
+    expect(trade?.kind === 'trade' && trade.px).toBe(185.115);
     expect(dbnPrice('185.110000000', 'x')).toBe(185.11);
     // And still reads the fixed-point form.
     expect(dbnPrice('185110000000', 'x')).toBe(185.11);
@@ -171,7 +172,7 @@ describe('databento normalization', () => {
     const minute = normalizeDatabentoRecord(OHLCV_1M, 'bars_1m');
     expect(minute!.kind).toBe('bar');
     const daily = normalizeDatabentoRecord(OHLCV_1M, 'bars_1d');
-    expect(daily!.kind === 'bar' && daily.tsEventEnd - daily.tsEvent).toBe(86_400_000_000_000n);
+    expect(daily?.kind === 'bar' && daily.tsEventEnd - daily.tsEvent).toBe(86_400_000_000_000n);
   });
 
   it('skips metadata records that share the stream', () => {
@@ -282,7 +283,7 @@ describe('databento replay', () => {
       adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1', ...WINDOW }),
     );
     expect(messages).toHaveLength(3);
-    expect(messages.every((m) => m.symbol === 'AAPL')).toBe(true);
+    expect(messages.every((m) => isMarketMessage(m) && m.symbol === 'AAPL')).toBe(true);
   });
 
   it('asks for map_symbols and the right vendor schema name', async () => {

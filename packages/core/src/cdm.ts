@@ -2,7 +2,7 @@ import type { AssetClass, BarInterval, ProviderId } from './ids.js';
 import { isFigi, UNRESOLVED_FIGI } from './ids.js';
 import { SchemaError } from './errors.js';
 
-export type CdmKind = 'quote' | 'trade' | 'bar' | 'depth' | 'control';
+export type CdmKind = 'quote' | 'trade' | 'bar' | 'depth' | 'snapshot' | 'control';
 
 export interface CdmBase {
   /** FIGI, or UNRESOLVED_FIGI before @conduit/symbology has resolved the instrument. */
@@ -76,6 +76,43 @@ export interface DepthSnapshot extends CdmBase {
   readonly asks: readonly DepthLevel[];
 }
 
+/** One session's aggregate figures, as a snapshot endpoint reports them. */
+export interface DayStats {
+  readonly open: number;
+  readonly high: number;
+  readonly low: number;
+  readonly close: number;
+  readonly volume: number;
+  readonly vwap?: number;
+  readonly trades?: number;
+}
+
+/**
+ * A point-in-time summary of one instrument: last trade, current quote, today's aggregates and the
+ * previous session's close, as returned by a single snapshot request.
+ *
+ * This exists because it is what consumers actually ask for. A dashboard or a screener wants "the
+ * price, the change and the volume", which is four separate things in the streaming CDM but one
+ * request to both Polygon's and Alpaca's snapshot endpoints.
+ *
+ * `change` is deliberately absent. It is `lastPx - prevClose`, and a consumer that wants it can
+ * subtract — an adapter computing it would be inventing a number the venue never reported.
+ */
+export interface InstrumentSnapshot extends CdmBase {
+  readonly kind: 'snapshot';
+  /** Last trade. Absent outside hours on some feeds. */
+  readonly lastPx?: number;
+  readonly lastSz?: number;
+  readonly bidPx?: number;
+  readonly bidSz?: number;
+  readonly askPx?: number;
+  readonly askSz?: number;
+  /** Today's session so far. */
+  readonly day?: DayStats;
+  /** The previous session's close, for computing a change. */
+  readonly prevClose?: number;
+}
+
 export type ControlKind =
   | 'provider_switch'
   | 'provider_degraded'
@@ -116,7 +153,7 @@ export interface ControlMessage {
   };
 }
 
-export type MarketMessage = QuoteTick | TradeTick | Bar | DepthSnapshot;
+export type MarketMessage = QuoteTick | TradeTick | Bar | DepthSnapshot | InstrumentSnapshot;
 export type CdmMessage = MarketMessage | ControlMessage;
 
 export interface Instrument {
@@ -134,6 +171,8 @@ export const isQuote = (m: CdmMessage): m is QuoteTick => m.kind === 'quote';
 export const isTrade = (m: CdmMessage): m is TradeTick => m.kind === 'trade';
 export const isBar = (m: CdmMessage): m is Bar => m.kind === 'bar';
 export const isDepth = (m: CdmMessage): m is DepthSnapshot => m.kind === 'depth';
+export const isInstrumentSnapshot = (m: CdmMessage): m is InstrumentSnapshot =>
+  m.kind === 'snapshot';
 export const isControl = (m: CdmMessage): m is ControlMessage => m.kind === 'control';
 export const isMarketMessage = (m: CdmMessage): m is MarketMessage => m.kind !== 'control';
 
@@ -156,7 +195,9 @@ function requireNonNegative(value: number, field: string, provider: ProviderId):
  */
 export function assertCdmInvariants(m: CdmMessage): void {
   if (isControl(m)) {
-    if (m.tsConduitRecv <= 0n) throw new SchemaError('control tsConduitRecv must be positive');
+    if (typeof m.tsConduitRecv !== 'bigint' || m.tsConduitRecv <= 0n) {
+      throw new SchemaError('control tsConduitRecv must be a positive bigint');
+    }
     return;
   }
 
@@ -170,17 +211,19 @@ export function assertCdmInvariants(m: CdmMessage): void {
   if (m.symbol.length === 0) {
     throw new SchemaError('symbol is empty', { provider, field: 'symbol' });
   }
-  if (m.tsEvent <= 0n) {
-    throw new SchemaError(`tsEvent must be positive, got ${m.tsEvent}`, {
+  // `typeof` first: an absent field compares false against every bigint, so a positivity check
+  // alone lets a message with no timestamp at all through.
+  if (typeof m.tsEvent !== 'bigint' || m.tsEvent <= 0n) {
+    throw new SchemaError(`tsEvent must be a positive bigint, got ${String(m.tsEvent)}`, {
       provider,
       field: 'tsEvent',
     });
   }
-  if (m.tsConduitRecv <= 0n) {
-    throw new SchemaError(`tsConduitRecv must be positive, got ${m.tsConduitRecv}`, {
-      provider,
-      field: 'tsConduitRecv',
-    });
+  if (typeof m.tsConduitRecv !== 'bigint' || m.tsConduitRecv <= 0n) {
+    throw new SchemaError(
+      `tsConduitRecv must be a positive bigint, got ${String(m.tsConduitRecv)}`,
+      { provider, field: 'tsConduitRecv' },
+    );
   }
 
   switch (m.kind) {
@@ -224,6 +267,34 @@ export function assertCdmInvariants(m: CdmMessage): void {
           provider,
           field: 'tsEventEnd',
         });
+      }
+      return;
+    }
+    case 'snapshot': {
+      for (const [field, value] of [
+        ['lastPx', m.lastPx],
+        ['bidPx', m.bidPx],
+        ['askPx', m.askPx],
+        ['prevClose', m.prevClose],
+      ] as const) {
+        if (value !== undefined) requireNonNegative(value, field, provider);
+      }
+      if (m.bidPx !== undefined && m.askPx !== undefined && m.bidPx > 0 && m.askPx > 0) {
+        if (m.bidPx > m.askPx) {
+          throw new SchemaError(`crossed snapshot quote: bid ${m.bidPx} > ask ${m.askPx}`, {
+            provider,
+            field: 'bidPx',
+          });
+        }
+      }
+      if (m.day) {
+        requireNonNegative(m.day.volume, 'day.volume', provider);
+        if (m.day.high < m.day.low) {
+          throw new SchemaError(`day high ${m.day.high} below low ${m.day.low}`, {
+            provider,
+            field: 'day.high',
+          });
+        }
       }
       return;
     }

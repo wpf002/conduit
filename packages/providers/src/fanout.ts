@@ -11,6 +11,9 @@ export function schemaOf(message: MarketMessage): Schema {
       return message.interval === '1m' ? 'bars_1m' : 'bars_1d';
     case 'depth':
       return 'depth_10';
+    case 'snapshot':
+      // A summary is not a streamable schema; it only ever arrives from summary().
+      return 'quote_l1';
   }
 }
 

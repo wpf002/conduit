@@ -74,15 +74,26 @@ export class HealthTracker {
   }
 
   #state(): HealthState {
-    // Nothing has been attempted, so nothing is known. Not the same as down.
-    if (!this.#everConnected && this.#consecutiveFailures === 0 && this.#messagesReceived === 0) {
-      return 'unknown';
-    }
     if (this.#consecutiveFailures >= this.#maxConsecutiveFailures) return 'down';
-    if (!this.#connected) return this.#consecutiveFailures > 0 ? 'degraded' : 'down';
-    if (this.isStale) return 'degraded';
+
+    if (this.#connected) {
+      if (this.isStale || this.#consecutiveFailures > 0) return 'degraded';
+      return 'healthy';
+    }
+
+    // Not connected, which means different things depending on whether there was ever a connection.
+    if (this.#everConnected) {
+      // A socket existed and is gone. That is a real outage.
+      return this.#consecutiveFailures > 0 ? 'degraded' : 'down';
+    }
+    if (this.#messagesReceived > 0) {
+      // Messages without a socket is a request-only provider, or the REST path of a socket one.
+      // Reporting it down because there is no socket would be reporting an outage that isn't.
+      return this.#consecutiveFailures > 0 ? 'degraded' : 'healthy';
+    }
     if (this.#consecutiveFailures > 0) return 'degraded';
-    return 'healthy';
+    // Nothing attempted, so nothing known. Not the same as down.
+    return 'unknown';
   }
 
   snapshot(): HealthSnapshot {

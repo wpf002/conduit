@@ -1,3 +1,4 @@
+// Copied from packages/client/test so the bridge can be tested without a provider.
 import {
   HealthTracker,
   UNRESOLVED_FIGI,

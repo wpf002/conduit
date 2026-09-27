@@ -1,7 +1,7 @@
 {
   "name": "@conduit/client",
   "version": "0.0.0",
-  "description": "ConduitClient — failover router and subscription manager",
+  "description": "ConduitClient \u2014 failover router and subscription manager",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts --format esm --dts --watch",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run --passWithNoTests",
     "clean": "rm -rf dist .turbo"
   },

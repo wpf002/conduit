@@ -94,11 +94,39 @@ Tiingo has no streaming feed at all.
 | `@conduit/ledger` | Quota accounting and spend attribution |
 | `@conduit/client` | Failover router and subscription manager |
 | `@conduit/cli` | `conduit doctor`, `conduit spend`, `conduit resolve` |
+| `@conduit/bridge` | Conduit as a subprocess, for consumers that are not TypeScript |
 
 Tiingo serves end-of-day bars only, and returns both raw and split-adjusted prices for each. The
 adapter emits raw by default — what printed on the day — with the adjusted set in `raw`. Pass
 `priceField: 'adjusted'` if you want the comparable-across-splits numbers; they are different values,
 not a formatting choice.
+
+## Using Conduit from another language
+
+Conduit is a TypeScript library, but a consumer in another language can run it as a subprocess and
+talk newline-delimited JSON to it:
+
+```python
+proc = subprocess.Popen(["node", "apps/bridge/dist/index.js"],
+                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
+proc.stdin.write(json.dumps({"id": 1, "op": "summary", "symbols": ["AAPL"]}) + "\n")
+proc.stdin.flush()
+row = json.loads(proc.stdout.readline())["data"][0]
+row["lastPx"] - row["prevClose"]   # the change
+```
+
+Ops are `summary`, `snapshot`, `subscribe`, `unsubscribe`, `health` and `shutdown`. A `subscribe`
+id is the handle its messages arrive under and the handle you unsubscribe with. Control messages —
+failovers, gaps, backpressure — come through on the same stream as the data.
+
+**A subprocess rather than a socket**, deliberately. Nothing listens, so there is no surface to
+secure and no port to collide; it dies with its parent and needs no cleanup. Market data goes
+provider → the bridge → the parent's pipe, all on one machine, so the licensing position is
+unchanged.
+
+**Timestamps cross as decimal strings.** JSON has no bigint and a nanosecond epoch does not fit a
+double — the same reason Databento's own encoder writes them as strings. `BigInt(row["tsEvent"])`,
+or `int()` in Python, gets them back exactly.
 
 ## CLI
 
@@ -266,6 +294,25 @@ matches what you subscribed to; `packages/providers/src/sequence.ts` explains th
 
 It is explicitly not cost minimization. Cost routing only paid off under subscription pooling, and
 pooling is the part the licences prohibit.
+
+## Snapshots
+
+`summary()` is one request for what a price row actually needs — last trade, current quote, today's
+aggregates and the previous session's close:
+
+```ts
+const [aapl] = await conduit.summary({ symbols: ['AAPL'] });
+aapl.lastPx;          // 341.02
+aapl.prevClose;       // 335.88
+aapl.day?.volume;     // 842202
+aapl.lastPx - aapl.prevClose;   // the change, which you compute
+```
+
+`change` is deliberately absent. It is a subtraction, and an adapter reporting it would be reporting
+a number the venue never sent.
+
+Polygon and Alpaca serve this from one endpoint each. Databento and Tiingo have no snapshot endpoint
+and throw `CoverageError`.
 
 ## Reference data
 

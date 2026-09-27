@@ -1,10 +1,11 @@
 {
-  "name": "@conduit/cli",
+  "name": "@conduit/bridge",
   "version": "0.0.0",
   "private": true,
+  "description": "Conduit as a subprocess, over newline-delimited JSON, for non-TypeScript consumers",
   "type": "module",
   "bin": {
-    "conduit": "./dist/index.js"
+    "conduit-bridge": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --clean",
@@ -16,12 +17,7 @@
   "dependencies": {
     "@conduit/client": "workspace:^",
     "@conduit/core": "workspace:^",
-    "@conduit/db": "workspace:^",
-    "@conduit/ledger": "workspace:^",
     "@conduit/providers": "workspace:^",
-    "@conduit/symbology": "workspace:^",
-    "commander": "^15.0.0",
-    "dotenv": "^18.0.3",
-    "picocolors": "^1.1.1"
+    "dotenv": "^18.0.3"
   }
 }

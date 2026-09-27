@@ -13,6 +13,7 @@ import {
   type AssetClass,
   type CdmMessage,
   type HealthSnapshot,
+  type InstrumentSnapshot,
   type ProviderAdapter,
   type QuoteTick,
   type Schema,
@@ -87,6 +88,17 @@ class TiingoAdapter implements ProviderAdapter {
   snapshot(req: SnapshotRequest): Promise<QuoteTick[]> {
     return Promise.reject(
       new CoverageError('tiingo serves end-of-day bars only; it has no quotes', {
+        provider: PROVIDER,
+        schema: 'quote_l1',
+        ...(req.assetClass ? { assetClass: req.assetClass } : {}),
+      }),
+    );
+  }
+
+  /** No snapshot endpoint, so there is nothing honest to return. */
+  summary(req: SnapshotRequest): Promise<InstrumentSnapshot[]> {
+    return Promise.reject(
+      new CoverageError('tiingo serves end-of-day bars only; it has no snapshot endpoint', {
         provider: PROVIDER,
         schema: 'quote_l1',
         ...(req.assetClass ? { assetClass: req.assetClass } : {}),

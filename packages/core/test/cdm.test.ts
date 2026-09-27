@@ -43,6 +43,14 @@ describe('assertCdmInvariants', () => {
     expect(() => assertCdmInvariants({ ...quote, tsConduitRecv: -1n })).toThrow(/tsConduitRecv/);
   });
 
+  it('rejects a missing timestamp, not just a non-positive one', () => {
+    // `undefined <= 0n` is false, so a positivity check alone passed a message with no timestamp.
+    const { tsConduitRecv: _recv, ...noRecv } = quote;
+    expect(() => assertCdmInvariants(noRecv as typeof quote)).toThrow(/tsConduitRecv/);
+    const { tsEvent: _event, ...noEvent } = quote;
+    expect(() => assertCdmInvariants(noEvent as typeof quote)).toThrow(/tsEvent/);
+  });
+
   it('rejects an empty symbol', () => {
     expect(() => assertCdmInvariants({ ...quote, symbol: '' })).toThrow(/symbol is empty/);
   });
@@ -54,6 +62,7 @@ describe('assertCdmInvariants', () => {
     provider: 'alpaca',
     tsEvent: 1704205800000000000n,
     tsEventEnd: 1704205860000000000n,
+    tsConduitRecv: 1704205800000100000n,
     interval: '1m',
     open: 185,
     high: 185.5,

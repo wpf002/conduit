@@ -382,6 +382,14 @@ function summarize(message: MarketMessage): Record<string, unknown> {
       };
     case 'depth':
       return { bids: message.bids.length, asks: message.asks.length };
+    case 'snapshot':
+      return {
+        last: message.lastPx,
+        bid: message.bidPx,
+        ask: message.askPx,
+        prevClose: message.prevClose,
+        volume: message.day?.volume,
+      };
   }
 }
 

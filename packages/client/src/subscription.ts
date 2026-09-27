@@ -235,24 +235,6 @@ export class ManagedSubscription implements Subscription {
   }
 
   /**
-   * A candidate whose data is meaningfully fresher than the active one's. "Meaningfully" is half the
-   * active provider's silence: a provider that is nearly as quiet is not evidence of anything, and
-   * switching to it would just move the problem.
-   */
-  #fresherCandidate(activeIndex: number, activeAgeMs: number): number | undefined {
-    const threshold = activeAgeMs / 2;
-    for (const [index, candidate] of this.#candidates.entries()) {
-      if (index === activeIndex) continue;
-      const health = candidate.health();
-      if (health.state === 'down') continue;
-      // Never having received a message is not the same as having received one recently.
-      if (health.lastMessageAgeMs === undefined) continue;
-      if (health.lastMessageAgeMs < threshold) return index;
-    }
-    return undefined;
-  }
-
-  /**
    * Asks a standby whether the market is trading. A snapshot is one request and answers the only
    * question that matters when the active provider goes quiet: is everything quiet, or just this one?
    *
@@ -395,19 +377,16 @@ export class ManagedSubscription implements Subscription {
       if (stale) {
         const activeAgeMs = health.lastMessageAgeMs!;
 
-        // Cheap path: another candidate is already streaming recent data for someone else.
-        const fresher = this.#fresherCandidate(this.#activeIndex, activeAgeMs);
-        if (fresher !== undefined) {
-          void this.#switch(
-            fresher,
-            `no message for ${activeAgeMs}ms while ${this.#candidates[fresher]!.id} is current`,
-          );
-          return;
-        }
-
-        // Otherwise ask. One snapshot answers whether anything is trading at all, and it is the only
-        // evidence available: the router streams from the active provider only, so a standby has no
-        // message history to compare against.
+        /*
+         * Ask a standby. One snapshot answers whether anything is trading at all, and it is the only
+         * evidence available: the router streams from the active provider only, so a standby has no
+         * stream history of its own to compare against.
+         *
+         * There was a shortcut here that compared standby health directly, to avoid the request. It
+         * had to go: the probe's own snapshot updates the standby's health, so the next tick saw a
+         * provider that had "just received a message" and switched to it. The probe is the only
+         * honest signal, and the backoff below is what keeps it cheap.
+         */
         const probeBackoffMs = Math.max(probeIntervalMs, staleAfterMs);
         if (Date.now() - this.#lastProbeAtMs < probeBackoffMs) return;
         this.#lastProbeAtMs = Date.now();
