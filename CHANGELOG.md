@@ -52,9 +52,33 @@ The bugs worth knowing about, because each one was wrong in a way the test suite
 - **Staleness detection thrashed between providers overnight.** It now requires corroboration from a
   standby's snapshot, which needs no market calendar.
 
+### Verification
+
+Three checks, because each one sees something the others cannot:
+
+| Command | Catches |
+|---|---|
+| `pnpm test` | logic errors, against fixtures written from vendor documentation |
+| `pnpm live` | protocol errors, against a real Alpaca server sending invented ticks |
+| `pnpm truth` | wrong numbers, against an independent vendor |
+| `pnpm smoke` | packaging errors, by installing into an empty project |
+
+`pnpm truth` found no scaling, shifting or field-mapping error across five symbols. It did establish
+that `prevClose` on Alpaca's free IEX plan sits 0–5 cents from the official close, because one venue's
+daily bar cannot contain the closing auction. That is structural, it is documented, and it changes what
+a UI shows as the day's change.
+
 ### Known limitation
 
-Streaming market data has never been received from a live provider. The stream handshake runs against
-Alpaca for real, but the account's single free-plan data connection is held elsewhere, so every
-attempt is refused with 406. Details in
-[docs/conformance.md](docs/conformance.md#what-running-it-found).
+No real tick has ever arrived over a stream. The handshake runs against Alpaca for real, but the
+account's single free-plan data connection is held elsewhere, so every attempt is refused with 406.
+Details in [docs/conformance.md](docs/conformance.md#what-running-it-found).
+
+### Guard
+
+Alpaca's sandbox lives at `/v2/test`, one path segment from `/v2/iex`, and quotes a symbol called
+FAKEPACA at prices nobody traded at. The feed name was read from the environment through an unchecked
+`as 'iex' | 'sip'` cast, so `ALPACA_FEED=test` built the sandbox URL and would have served invented
+prices to a consumer with nothing saying so. Now: the feed name is validated, the adapter refuses a
+sandbox URL without `allowSyntheticData: true`, `ProviderAdapter.synthetic` puts the disclosure on the
+interface, and the bridge refuses to start against a synthetic feed unless `CONDUIT_ALLOW_SYNTHETIC=1`.

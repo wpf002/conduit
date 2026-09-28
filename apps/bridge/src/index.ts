@@ -27,6 +27,23 @@ const providers: ProviderAdapter[] = [];
 const polygonKey = process.env['POLYGON_API_KEY'];
 if (polygonKey) providers.push(polygon({ apiKey: polygonKey, logger }));
 
+/**
+ * ALPACA_FEED, validated rather than cast. The `as 'iex' | 'sip'` this replaces let any string
+ * through, and Alpaca's sandbox is a feed name away from a real one: ALPACA_FEED=test built
+ * wss://stream.data.alpaca.markets/v2/test and served invented FAKEPACA prices to whatever was
+ * consuming this process, silently. The adapter now refuses that too; this is the earlier, clearer
+ * error.
+ */
+function alpacaFeed(): 'iex' | 'sip' | 'delayed_sip' {
+  const raw = process.env['ALPACA_FEED'];
+  if (raw === undefined || raw === '') return 'iex';
+  if (raw === 'iex' || raw === 'sip' || raw === 'delayed_sip') return raw;
+  throw new Error(
+    `ALPACA_FEED must be iex, sip or delayed_sip; received ${JSON.stringify(raw)}. ` +
+      `"test" is Alpaca's sandbox and serves prices nobody traded at.`,
+  );
+}
+
 const alpacaId = process.env['ALPACA_API_KEY_ID'];
 const alpacaSecret = process.env['ALPACA_API_SECRET_KEY'];
 if (alpacaId && alpacaSecret) {
@@ -34,7 +51,7 @@ if (alpacaId && alpacaSecret) {
     alpaca({
       keyId: alpacaId,
       secret: alpacaSecret,
-      feed: (process.env['ALPACA_FEED'] as 'iex' | 'sip' | undefined) ?? 'iex',
+      feed: alpacaFeed(),
       logger,
     }),
   );
@@ -49,6 +66,19 @@ if (tiingoKey) providers.push(tiingo({ apiKey: tiingoKey }));
 
 if (providers.length === 0) {
   process.stderr.write('conduit-bridge: no provider keys in the environment\n');
+  process.exit(1);
+}
+
+// The bridge is what a non-TypeScript consumer sees, and it cannot inspect the adapters it got. A
+// consumer asked for market data; handing it a vendor sandbox's invented prices over the same
+// interface is worse than handing it nothing, because nothing fails loudly. Refuse to start.
+const synthetic = providers.filter((p) => p.synthetic).map((p) => p.id);
+if (synthetic.length > 0 && process.env['CONDUIT_ALLOW_SYNTHETIC'] !== '1') {
+  process.stderr.write(
+    `conduit-bridge: ${synthetic.join(', ')} is configured against a vendor sandbox that serves ` +
+      `invented prices. Refusing to serve it. Set CONDUIT_ALLOW_SYNTHETIC=1 only if a fake price is ` +
+      `genuinely what the consumer wants.\n`,
+  );
   process.exit(1);
 }
 

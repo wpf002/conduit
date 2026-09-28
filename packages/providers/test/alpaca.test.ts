@@ -335,3 +335,55 @@ describe('alpaca coverage', () => {
     expect(() => alpaca({ keyId: '', secret: 'y' })).toThrow(AuthError);
   });
 });
+
+describe('synthetic data cannot reach a consumer by accident', () => {
+  /**
+   * Alpaca's test stream lives at the same base URL as the real feeds — `/v2/test` alongside
+   * `/v2/iex` — and serves invented ticks for the symbol FAKEPACA. The feed name was being read from
+   * the environment through an unchecked `as 'iex' | 'sip'` cast in both the CLI and the bridge, so
+   * ALPACA_FEED=test built the sandbox URL and delivered synthetic prices to whatever was consuming
+   * the bridge, with nothing anywhere saying so.
+   */
+  it('refuses a feed name that is not a real feed', () => {
+    expect(() =>
+      alpaca({ keyId: 'k', secret: 's', feed: 'test' as unknown as 'iex' }),
+    ).toThrow(/feed must be one of/);
+  });
+
+  it('refuses a url pointing at the sandbox unless synthetic data is asked for by name', () => {
+    expect(() =>
+      alpaca({
+        keyId: 'k',
+        secret: 's',
+        wsUrl: 'wss://stream.data.alpaca.markets/v2/test',
+      }),
+    ).toThrow(/allowSyntheticData/);
+  });
+
+  it('allows the sandbox when the caller says so explicitly', () => {
+    expect(() =>
+      alpaca({
+        keyId: 'k',
+        secret: 's',
+        wsUrl: 'wss://stream.data.alpaca.markets/v2/test',
+        allowSyntheticData: true,
+      }),
+    ).not.toThrow();
+  });
+
+  it('leaves a local test server alone, which is how every other test connects', () => {
+    expect(() => alpaca({ keyId: 'k', secret: 's', wsUrl: 'ws://127.0.0.1:1234' })).not.toThrow();
+  });
+
+  it('reports whether it is serving synthetic data, so a consumer can refuse it', () => {
+    const real = alpaca({ keyId: 'k', secret: 's' });
+    const fake = alpaca({
+      keyId: 'k',
+      secret: 's',
+      wsUrl: 'wss://stream.data.alpaca.markets/v2/test',
+      allowSyntheticData: true,
+    });
+    expect(real.synthetic).toBe(false);
+    expect(fake.synthetic).toBe(true);
+  });
+});

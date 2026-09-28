@@ -141,11 +141,43 @@ documentation:
 | Real mid-stream connection drop | `terminate()` with no close frame; auth and subscriptions replay, data resumes, health returns to `healthy` |
 | Derived flags | a size-3 trade normalizes to `OddLot \| Derived`, and the venue is the vendor's own `"N"` rather than a fabricated MIC |
 
+## Prices, checked against an independent vendor
+
+`scripts/price-truth.mjs` (`pnpm truth`) compares Conduit's REST snapshot against Yahoo, which needs
+no key, plus Finnhub and FMP when their keys are present. It is the only check here that can catch a
+wrong number: the unit tests compare against fixtures written from the same documents the adapter was,
+and the live check compares against a server sending invented ticks.
+
+Result on 2026-09-28 across AAPL, MSFT, SPY, NVDA and BRK.B:
+
+| Field | Result |
+|---|---|
+| `lastPx` | within 0.01% of Yahoo on every symbol |
+| `prevClose` | exact on MSFT and SPY; 0.03–0.05 low on AAPL, NVDA and BRK.B |
+
+**No scaling, shifting or field-mapping error exists.** That was the thing worth ruling out, given
+this repo has shipped a 100x quote-size bug and a fixed-point field read as a decimal.
+
+### Why `prevClose` is a few cents low, and why that is not a bug
+
+Alpaca's free plan is IEX: one venue, roughly 2% of consolidated volume. A daily bar built from IEX
+prints cannot contain the closing auction, and the official close is struck in that auction on the
+primary listing exchange — Nasdaq for AAPL and NVDA, NYSE for BRK.B. So Conduit's `prevClose` and an
+official close are different numbers by construction.
+
+Attributed rather than assumed: today's partial daily bar differs from Yahoo's in *both* directions
+(+0.098 AAPL, −0.055 NVDA, +0.090 MSFT), which is two feeds sampling different last trades. A
+systematic arithmetic error would be one-directional and proportional.
+
+It still matters, because `lastPx - prevClose` is what a UI shows as the day's change. `feed: 'sip'`
+on a paid plan fixes it; no computation does. `pnpm truth` reports it as a venue-coverage note and
+fails only past 50 cents.
+
 ### What is still not verified
 
-**No real price.** The test stream's ticks are invented, so nothing here proves that a price Conduit
-emits equals a price that printed. That is the one remaining gap and it needs two things: the
-production feed, and a second source to compare against.
+**A real tick over a stream.** The snapshot path is verified against an independent vendor and the
+streaming protocol is verified against a real server, but no live tick has ever arrived: the
+production connection slot is held.
 
 Production ticks have not been received. Alpaca's free plan allows one concurrent data connection and
 something outside this machine holds the account's slot: after a 5½-minute quiet window with nothing

@@ -33,6 +33,15 @@ export class ConduitClient {
     return providerIds(this.#config.providers);
   }
 
+  /**
+   * Any configured provider pointed at a vendor sandbox rather than the market. Empty is the normal
+   * answer. It is a list rather than a boolean because in a mixed configuration a consumer needs to
+   * know which feed to distrust, not merely that one of them is fake.
+   */
+  get synthetic(): readonly ProviderId[] {
+    return this.#config.providers.filter((p) => p.synthetic).map((p) => p.id);
+  }
+
   /** Which of the configured keys can serve this request at all, in the order they'd be tried. */
   coverage(schema: Schema, assetClass: AssetClass = 'equity', symbols: readonly string[] = []) {
     return providerIds(coveringProviders(this.#config, { schema, assetClass, symbols }));

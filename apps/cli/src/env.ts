@@ -42,6 +42,23 @@ export function loadEnv(options: LoadOptions = {}): LoadedEnv {
   if (polygonKey) adapters.push(polygon({ apiKey: polygonKey, ...extras('polygon') }));
   else missing.push('polygon');
 
+/**
+ * ALPACA_FEED, validated rather than cast. The `as 'iex' | 'sip'` this replaces let any string
+ * through, and Alpaca's sandbox is a feed name away from a real one: ALPACA_FEED=test built
+ * wss://stream.data.alpaca.markets/v2/test and served invented FAKEPACA prices to whatever was
+ * consuming this process, silently. The adapter now refuses that too; this is the earlier, clearer
+ * error.
+ */
+function alpacaFeed(): 'iex' | 'sip' | 'delayed_sip' {
+  const raw = process.env['ALPACA_FEED'];
+  if (raw === undefined || raw === '') return 'iex';
+  if (raw === 'iex' || raw === 'sip' || raw === 'delayed_sip') return raw;
+  throw new Error(
+    `ALPACA_FEED must be iex, sip or delayed_sip; received ${JSON.stringify(raw)}. ` +
+      `"test" is Alpaca's sandbox and serves prices nobody traded at.`,
+  );
+}
+
   const alpacaId = process.env['ALPACA_API_KEY_ID'];
   const alpacaSecret = process.env['ALPACA_API_SECRET_KEY'];
   if (alpacaId && alpacaSecret) {
@@ -49,7 +66,7 @@ export function loadEnv(options: LoadOptions = {}): LoadedEnv {
       alpaca({
         keyId: alpacaId,
         secret: alpacaSecret,
-        feed: (process.env['ALPACA_FEED'] as 'iex' | 'sip' | undefined) ?? 'iex',
+        feed: alpacaFeed(),
         ...extras('alpaca'),
       }),
     );

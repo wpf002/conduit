@@ -107,6 +107,12 @@ export interface AlpacaOptions {
   readonly secret: string;
   /** 'iex' is the free feed, 'sip' the paid consolidated tape, 'delayed_sip' the 15-minute one. */
   readonly feed?: 'iex' | 'sip' | 'delayed_sip';
+  /**
+   * Required to connect to Alpaca's test stream, which serves invented ticks for FAKEPACA. Without
+   * this, a URL or feed name pointing at the sandbox is a constructor error rather than a silent
+   * source of fictional prices. `scripts/live-conformance.mjs` is what it exists for.
+   */
+  readonly allowSyntheticData?: boolean;
   readonly wsUrl?: string;
   readonly restBaseUrl?: string;
   readonly staleAfterMs?: number;
@@ -137,6 +143,8 @@ export interface AlpacaOptions {
 }
 
 class AlpacaAdapter implements ProviderAdapter {
+  readonly synthetic: boolean;
+
   readonly id = PROVIDER;
   readonly capabilities = CAPABILITIES;
 
@@ -150,6 +158,9 @@ class AlpacaAdapter implements ProviderAdapter {
   #log: Logger;
 
   constructor(options: AlpacaOptions) {
+    this.synthetic = isSyntheticUrl(
+      options.wsUrl ?? `wss://stream.data.alpaca.markets/v2/${options.feed ?? 'iex'}`,
+    );
     if (!options.keyId || !options.secret) {
       throw new AuthError('alpaca: keyId and secret are required', { provider: PROVIDER });
     }
@@ -543,9 +554,49 @@ class AlpacaAdapter implements ProviderAdapter {
   }
 }
 
+const REAL_FEEDS = ['iex', 'sip', 'delayed_sip'] as const;
+/** Alpaca's sandbox path. One segment away from a real feed, and serving numbers nobody traded at. */
+const SYNTHETIC_PATH = /\/v2\/(test|sandbox)(\/|$|\?)/;
+
+/**
+ * Whether this configuration reaches Alpaca's sandbox. A localhost or 127.0.0.1 URL is how every
+ * test in this repo connects, so it is not treated as the vendor's sandbox — it is a fake server the
+ * caller wrote, which is a different thing from the vendor serving fiction over the real hostname.
+ */
+function isSyntheticUrl(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  const host = parsed.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.endsWith('.test')) {
+    return false;
+  }
+  return SYNTHETIC_PATH.test(parsed.pathname);
+}
+
 export function alpaca(options: AlpacaOptions): ProviderAdapter {
+  if (options.feed !== undefined && !(REAL_FEEDS as readonly string[]).includes(options.feed)) {
+    // Previously an `as 'iex' | 'sip'` cast in the CLI and the bridge, so ALPACA_FEED=test built the
+    // sandbox URL and handed a consumer synthetic prices with nothing saying so.
+    throw new SchemaError(
+      `alpaca feed must be one of ${REAL_FEEDS.join(', ')}; received ${String(options.feed)}`,
+      { provider: PROVIDER },
+    );
+  }
+  const url = options.wsUrl ?? `wss://stream.data.alpaca.markets/v2/${options.feed ?? 'iex'}`;
+  if (isSyntheticUrl(url) && options.allowSyntheticData !== true) {
+    throw new SchemaError(
+      `${url} is Alpaca's test stream and serves invented prices; pass allowSyntheticData: true if that is what you want`,
+      { provider: PROVIDER },
+    );
+  }
   return new AlpacaAdapter(options);
 }
+
+export { isSyntheticUrl };
 
 export { isoToNs };
 export * from './normalize.js';

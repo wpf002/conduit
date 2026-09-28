@@ -39,6 +39,8 @@ export interface FakeAdapterOptions {
  * merely mocked.
  */
 export class FakeAdapter implements ProviderAdapter {
+  /** A double, not a vendor sandbox: the data is the test's own, and the test knows that. */
+  readonly synthetic = false;
   readonly id: ProviderId;
   readonly capabilities: ReadonlySet<Schema>;
 

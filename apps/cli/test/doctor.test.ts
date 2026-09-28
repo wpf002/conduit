@@ -38,6 +38,8 @@ interface ProbeAdapterOptions {
 
 /** A provider that fails in exactly the way the test is about. */
 class ProbeAdapter implements ProviderAdapter {
+  /** A double, not a vendor sandbox: the data is the test's own, and the test knows that. */
+  readonly synthetic = false;
   readonly id: ProviderId;
   readonly capabilities: ReadonlySet<Schema>;
   #assetClasses: ReadonlySet<AssetClass>;

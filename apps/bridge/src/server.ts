@@ -40,7 +40,14 @@ export class BridgeServer {
     for (const schema of ['quote_l1', 'trades', 'bars_1m', 'bars_1d', 'depth_10'] as const) {
       coverage[schema] = this.#client.coverage(schema);
     }
-    this.#send({ type: 'ready', providers: this.#client.providers, coverage });
+    // `synthetic` is on the ready frame so a consumer that opted in with CONDUIT_ALLOW_SYNTHETIC can
+    // still tell, and can label or refuse the data itself.
+    this.#send({
+      type: 'ready',
+      providers: this.#client.providers,
+      coverage,
+      synthetic: this.#client.synthetic,
+    });
   }
 
   /** Feeds raw bytes in. Complete lines are handled; a partial line waits for its newline. */

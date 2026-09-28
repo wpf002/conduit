@@ -48,6 +48,16 @@ export interface StreamRequest {
 export interface ProviderAdapter {
   readonly id: ProviderId;
   readonly capabilities: ReadonlySet<Schema>;
+  /**
+   * True when this adapter is pointed at a vendor sandbox that serves invented data rather than the
+   * market. Alpaca's test stream is the case that exists: it lives at `/v2/test`, one path segment
+   * away from `/v2/iex`, and quotes a symbol called FAKEPACA at prices nobody traded at.
+   *
+   * It is on the interface rather than left to each adapter's options because a consumer has to be
+   * able to refuse it without knowing which vendor it is talking to. A price that is fake is worse
+   * than a price that is missing: a missing one fails loudly and a fake one gets traded on.
+   */
+  readonly synthetic: boolean;
 
   health(): HealthSnapshot;
   supports(schema: Schema, assetClass: AssetClass): boolean;

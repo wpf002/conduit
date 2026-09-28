@@ -212,10 +212,21 @@ staying an internal package. See [docs/phase-5-dogfood.md](docs/phase-5-dogfood.
 ## Checking that it works
 
 ```bash
+pnpm truth     # are the prices right, against an independent vendor
 pnpm live      # streaming protocol, against a real Alpaca server
 pnpm smoke     # packaging, by installing into an empty project
-pnpm test      # 385 unit tests against fakes
+pnpm test      # unit tests against fakes
 ```
+
+`pnpm truth` is the only check that can catch a wrong *number*. The unit tests compare Conduit against
+fixtures written from the same documentation the adapter was written from, and `pnpm live` compares it
+against a real server sending invented ticks — neither can see a price that is scaled, shifted, or
+read out of the wrong field. It compares against Yahoo, which needs no key, and against Finnhub and
+FMP when `FINNHUB_API_KEY` or `FMP_API_KEY` are set.
+
+The assertion is the **previous close**, because it is settled and official: every vendor takes it
+from the same consolidated tape after the session ends. Last price is checked for scale only — IEX's
+last trade is a different trade from a consolidated feed's, so cents of disagreement is correct.
 
 `pnpm live` is the one that would have caught the bugs the others missed. It runs against Alpaca's
 test stream — a real Alpaca server speaking the real protocol with synthetic ticks — and checks the
@@ -227,14 +238,32 @@ Three bugs in the socket layer were found this way, none of which 191 passing te
 every fake server implemented what the adapter expected. They are recorded in
 [docs/conformance.md](docs/conformance.md#what-running-it-found).
 
+### `prevClose` on a single-venue feed is not the official close
+
+Measured, not assumed. On Alpaca's free IEX plan `prevClose` sits 0 to 5 cents from the official
+close — 0.05 on AAPL, 0.03 on NVDA, 0.05 on BRK.B, exact on MSFT and SPY.
+
+The mechanism is structural rather than a defect: IEX is one venue at roughly 2% of consolidated
+volume, so a daily bar built from IEX prints cannot contain the closing auction, and the official
+close is struck in that auction on the primary listing exchange. `pnpm truth` reports these as
+venue-coverage notes and fails only past 50 cents, which venue coverage cannot explain.
+
+It matters because `lastPx - prevClose` is what a UI shows as the day's change, so that number is a
+few cents off every other source. `feed: 'sip'` on a paid plan resolves it. Nothing Conduit can compute
+does.
+
 ### Known limitation
 
-**No real price has ever been verified.** `pnpm live` settles the protocol, not the data: its ticks
-are invented, so nothing proves a price Conduit emits equals a price that printed. Production ticks
-have not been received either — Alpaca's free plan allows one concurrent data connection and something
-outside this machine holds the account's slot, giving eleven consecutive `406` refusals after a quiet
-window on an `ACTIVE` account whose REST endpoints work. That needs the slot freed or a second key,
-and then a second source to compare against. No code change is pending on it.
+**Streaming prices have never been received.** `pnpm truth` verifies the REST snapshot path, and
+`pnpm live` verifies the streaming protocol against a real server sending invented ticks. What has
+never happened is a real tick arriving over a stream: Alpaca's free plan allows one concurrent data
+connection and something outside this machine holds the account's slot, giving eleven consecutive `406`
+refusals after a quiet window on an `ACTIVE` account whose REST endpoints work. It needs the slot freed
+or a second key. No code change is pending on it.
+
+Also unverified: sequence numbering against a real multi-symbol feed, behaviour across a market open
+and close, and Polygon's handshake — corrected alongside Alpaca's, but never tested against a real
+Polygon server.
 
 ## Versioning
 

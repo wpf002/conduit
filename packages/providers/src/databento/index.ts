@@ -73,6 +73,9 @@ export interface DatabentoOptions {
  * to offer a live subscription. See docs/databento-live.md.
  */
 class DatabentoAdapter implements ProviderAdapter {
+  /** No sandbox endpoint exists for this vendor, so nothing here can be synthetic. */
+  readonly synthetic = false;
+
   readonly id = PROVIDER;
   readonly capabilities = CAPABILITIES;
 
