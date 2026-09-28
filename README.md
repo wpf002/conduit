@@ -209,17 +209,32 @@ Phase 5 is the go/no-go gate for product-ization, and three of its four outcomes
 staying an internal package. See [docs/phase-5-dogfood.md](docs/phase-5-dogfood.md) and
 [docs/migration.md](docs/migration.md).
 
-## Known limitation
+## Checking that it works
 
-**Streaming market data has never been received from a live provider.** Everything else has run for
-real against Alpaca: auth, `summary()`, the reference loaders, and the stream's own handshake. The
-stream stops at Alpaca's free-plan cap of one concurrent data connection, which something outside this
-machine holds — eleven consecutive `406 connection limit exceeded` refusals after a quiet window, on an
-`ACTIVE` account whose REST endpoints work. It needs the slot freed or a second key; no code change is
-pending on it.
+```bash
+pnpm live      # streaming protocol, against a real Alpaca server
+pnpm smoke     # packaging, by installing into an empty project
+pnpm test      # 385 unit tests against fakes
+```
 
-Trying it found three bugs in the socket layer that 191 passing tests could not, all recorded in
+`pnpm live` is the one that would have caught the bugs the others missed. It runs against Alpaca's
+test stream — a real Alpaca server speaking the real protocol with synthetic ticks — and checks the
+auth handshake, subscription acks, normalization, nanosecond precision against the vendor's own ISO
+strings, and a real mid-stream connection drop with resubscription. It needs no data entitlement and
+does not contend for the production feed's connection, so it runs on a free key outside market hours.
+
+Three bugs in the socket layer were found this way, none of which 191 passing tests could see, because
+every fake server implemented what the adapter expected. They are recorded in
 [docs/conformance.md](docs/conformance.md#what-running-it-found).
+
+### Known limitation
+
+**No real price has ever been verified.** `pnpm live` settles the protocol, not the data: its ticks
+are invented, so nothing proves a price Conduit emits equals a price that printed. Production ticks
+have not been received either — Alpaca's free plan allows one concurrent data connection and something
+outside this machine holds the account's slot, giving eleven consecutive `406` refusals after a quiet
+window on an `ACTIVE` account whose REST endpoints work. That needs the slot freed or a second key,
+and then a second source to compare against. No code change is pending on it.
 
 ## Versioning
 

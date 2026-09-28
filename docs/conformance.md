@@ -121,14 +121,39 @@ for as long as it was left running. Three changes:
 Measured on the same key afterwards: **4.4 seconds to a `RateLimitError` reading
 `alpaca connection limit reached (406): connection limit exceeded`**, in place of indefinite silence.
 
+## The test stream settles most of what was left
+
+Alpaca runs `wss://stream.data.alpaca.markets/v2/test`, a real Alpaca server speaking the real
+protocol with synthetic ticks on the symbol `FAKEPACA`. It needs no data entitlement and does not
+contend for the production feed's single connection, so it works on a free key, outside market hours,
+while the production slot is held by somebody else. `scripts/live-conformance.mjs` (`pnpm live`) runs
+against it, and it is the check that would have caught all three bugs above.
+
+What it settles, against the vendor's own implementation rather than a fake written from the vendor's
+documentation:
+
+| Check | Result |
+|---|---|
+| Stream auth handshake | authenticates in ~200ms |
+| Subscription acknowledgement | `{"T":"subscription","trades":["FAKEPACA"],"quotes":["FAKEPACA"]}` |
+| Normalization of trades and quotes | zero `SchemaError`, zero CDM invariant failures |
+| Nanosecond precision | every `tsEvent` bigint matches the nanoseconds in the vendor's own ISO string |
+| Real mid-stream connection drop | `terminate()` with no close frame; auth and subscriptions replay, data resumes, health returns to `healthy` |
+| Derived flags | a size-3 trade normalizes to `OddLot \| Derived`, and the venue is the vendor's own `"N"` rather than a fabricated MIC |
+
 ### What is still not verified
 
-Streaming market data has never been received. Alpaca's free plan allows one concurrent data
-connection and something outside this machine holds the account's slot: after a 5½-minute quiet
-window with nothing of ours connected, all eleven attempts were refused with 406 within ~44ms. The
-account is `ACTIVE` and REST works, so this is a connection cap and not entitlement. What remains
-unverified is therefore everything downstream of a successful stream auth: subscription
-acknowledgement, message normalization against real ticks, sequence numbering, and behaviour across a
-session boundary.
+**No real price.** The test stream's ticks are invented, so nothing here proves that a price Conduit
+emits equals a price that printed. That is the one remaining gap and it needs two things: the
+production feed, and a second source to compare against.
 
-Freeing the slot — or a second key — is all that is needed; no code change is pending on it.
+Production ticks have not been received. Alpaca's free plan allows one concurrent data connection and
+something outside this machine holds the account's slot: after a 5½-minute quiet window with nothing
+of ours connected, all eleven attempts were refused with 406 within ~44ms each. The account is
+`ACTIVE` and REST works, so this is a connection cap rather than entitlement, and `lsof` found no
+local process holding it — it is a server-side session. Freeing the slot or adding a second key is all
+that is needed; no code change is pending on it.
+
+Also still unverified: sequence numbering against a real multi-symbol feed (the test stream carries
+one symbol), behaviour across a market open and close, and Polygon's handshake, which was corrected
+alongside Alpaca's but has never met a real Polygon server.
