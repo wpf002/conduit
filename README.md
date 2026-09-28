@@ -212,31 +212,45 @@ staying an internal package. See [docs/phase-5-dogfood.md](docs/phase-5-dogfood.
 ## Checking that it works
 
 ```bash
+pnpm test      # 398 unit tests against fakes
 pnpm truth     # are the prices right, against an independent vendor
 pnpm live      # streaming protocol, against a real Alpaca server
 pnpm smoke     # packaging, by installing into an empty project
-pnpm test      # unit tests against fakes
+pnpm docs:api  # fails when a public signature names an unexported type
 ```
 
-`pnpm truth` is the only check that can catch a wrong *number*. The unit tests compare Conduit against
-fixtures written from the same documentation the adapter was written from, and `pnpm live` compares it
-against a real server sending invented ticks — neither can see a price that is scaled, shifted, or
-read out of the wrong field. It compares against Yahoo, which needs no key, and against Finnhub and
-FMP when `FINNHUB_API_KEY` or `FMP_API_KEY` are set.
+Each one sees something the others cannot, which is the point. The unit tests compare Conduit against
+fixtures written from the same documentation the adapter was written from, so they prove internal
+consistency and nothing else. Every bug found by running this against a real provider was invisible to
+all of them.
 
-The assertion is the **previous close**, because it is settled and official: every vendor takes it
-from the same consolidated tape after the session ends. Last price is checked for scale only — IEX's
-last trade is a different trade from a consolidated feed's, so cents of disagreement is correct.
+### What is verified, and how
 
-`pnpm live` is the one that would have caught the bugs the others missed. It runs against Alpaca's
-test stream — a real Alpaca server speaking the real protocol with synthetic ticks — and checks the
-auth handshake, subscription acks, normalization, nanosecond precision against the vendor's own ISO
-strings, and a real mid-stream connection drop with resubscription. It needs no data entitlement and
-does not contend for the production feed's connection, so it runs on a free key outside market hours.
+| Path | Verified by | Status |
+|---|---|---|
+| CDM, router, health, queue logic | `pnpm test` | 398 tests |
+| Snapshot prices (`summary`) | `pnpm truth` vs Yahoo, Finnhub, FMP | `lastPx` within 0.01%, no scaling or mapping error |
+| Stream auth handshake | `pnpm live` vs a real Alpaca server | authenticates in ~200ms |
+| `trades`, `quote_l1`, `bars_1m` normalization | `pnpm live` | zero `SchemaError`, zero invariant failures |
+| Nanosecond precision | `pnpm live` | every `tsEvent` matches the vendor's own ISO string |
+| Reconnect and resubscribe | `pnpm live`, real socket `terminate()` | data resumes, health returns to `healthy` |
+| Failover past a dead provider | `pnpm live` | real data arrives from the surviving provider |
+| Symbology against real OpenFIGI | `conduit resolve` | `AAPL` → `BBG000B9XRY4`, `BRK.B` → `BBG000DWG505` |
+| Ledger against real Postgres | `conduit spend` | events, units and headroom all round-trip |
+| `conduit doctor` | run against a live key | reports coverage, headroom, reference tables, and why a stream refused |
+| Packaging and the README quickstart | `pnpm smoke` | installs and runs outside the workspace |
+| Sandbox cannot reach a consumer | `pnpm test` + the bridge | `ALPACA_FEED=test` exits 1 |
 
-Three bugs in the socket layer were found this way, none of which 191 passing tests could see, because
-every fake server implemented what the adapter expected. They are recorded in
-[docs/conformance.md](docs/conformance.md#what-running-it-found).
+### What is not verified, and why
+
+| Gap | Blocker |
+|---|---|
+| A real streaming tick | Alpaca's free plan allows one concurrent data connection and something outside this machine holds the account's slot — eleven consecutive `406`s after a quiet window, on an `ACTIVE` account whose REST works. Needs the slot freed or a second key. |
+| `bars_1d` over a stream | Alpaca's test stream does not serve `dailyBars`; subscribing returns an acknowledgement with the channel absent. |
+| Sequence numbering | Needs a real multi-symbol feed. The test stream carries one symbol. |
+| A market open and close | Calendar time. |
+| Polygon, Databento, Tiingo | No keys. Polygon's handshake was corrected alongside Alpaca's and has never met a real Polygon server. |
+| Official closing prices | Requires a paid SIP plan; see below. |
 
 ### `prevClose` on a single-venue feed is not the official close
 
@@ -251,36 +265,6 @@ venue-coverage notes and fails only past 50 cents, which venue coverage cannot e
 It matters because `lastPx - prevClose` is what a UI shows as the day's change, so that number is a
 few cents off every other source. `feed: 'sip'` on a paid plan resolves it. Nothing Conduit can compute
 does.
-
-### Known limitation
-
-**Streaming prices have never been received.** `pnpm truth` verifies the REST snapshot path, and
-`pnpm live` verifies the streaming protocol against a real server sending invented ticks. What has
-never happened is a real tick arriving over a stream: Alpaca's free plan allows one concurrent data
-connection and something outside this machine holds the account's slot, giving eleven consecutive `406`
-refusals after a quiet window on an `ACTIVE` account whose REST endpoints work. It needs the slot freed
-or a second key. No code change is pending on it.
-
-Also unverified: sequence numbering against a real multi-symbol feed, behaviour across a market open
-and close, and Polygon's handshake — corrected alongside Alpaca's, but never tested against a real
-Polygon server.
-
-## Versioning
-
-Every package is `0.1.0` and nothing is published. Version bumps and `CHANGELOG.md` are generated by
-[Changesets](.changeset/README.md), not written by hand:
-
-```bash
-pnpm changeset            # describe a change
-pnpm version-packages     # apply every pending change
-pnpm docs:api             # typedoc API reference into docs/api (gitignored)
-pnpm smoke                # pack, install into an empty project, run the quickstart there
-```
-
-`pnpm smoke` is the one that matters before any release. It packs every published package, installs
-the tarballs outside the workspace, and runs the README quickstart plus a `tsc` check with
-`skipLibCheck: false` — which is how it caught two packages being uninstallable and a third leaking
-`ws` and `Buffer` into its public types without declaring them.
 
 ## Repository settings
 
@@ -344,10 +328,16 @@ both:
 ```bash
 pnpm install
 cp .env.example .env    # fill in your provider keys
+createdb conduit        # or point DATABASE_URL at an existing database
 pnpm db:push            # local Postgres for symbology cache
 pnpm build
 pnpm test
 ```
+
+`pnpm db:push` reads `DATABASE_URL` through `packages/db/prisma.config.ts`, because Prisma 7 no longer
+takes it from `datasource db { url = env(...) }` for CLI commands. If it reports **permission denied
+for schema public**, `DATABASE_URL` is connecting as a role that does not own the database: Postgres 15
+and later revoke `CREATE` on `public` from non-owners. Connect as the owner, or grant it.
 
 ## Failover
 

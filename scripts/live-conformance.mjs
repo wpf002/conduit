@@ -120,8 +120,12 @@ async function collect(schema, windowMs, onAdapter) {
 console.log(`live conformance against ${TEST_WS} (${SYMBOL})\n`);
 
 // ---------------------------------------------------------------- per-schema normalization
-for (const schema of ['trades', 'quote_l1']) {
-  const r = await collect(schema, Math.max(20_000, WINDOW_MS / 3));
+// bars_1m gets its own window because a minute bar arrives once a minute. bars_1d is absent from this
+// list because the test stream does not serve it: subscribing to dailyBars returns an acknowledgement
+// with the channel missing, so there is nothing to verify against here.
+const SCHEMA_WINDOWS = { trades: 20_000, quote_l1: 20_000, bars_1m: 80_000 };
+for (const [schema, floor] of Object.entries(SCHEMA_WINDOWS)) {
+  const r = await collect(schema, Math.max(floor, WINDOW_MS / 3));
   check(r.thrown === undefined, `${schema}: stream did not throw`, r.thrown ? String(r.thrown) : '');
   check(r.messages > 0, `${schema}: received messages`, `${r.messages} (${JSON.stringify(r.kinds)})`);
   check(r.invariantErrors === 0, `${schema}: every message satisfies the CDM invariants`);
@@ -162,6 +166,87 @@ for (const schema of ['trades', 'quote_l1']) {
   );
   check(r.invariantErrors === 0, 'reconnect: no malformed message after resubscribing');
   check(r.health.state === 'healthy', 'reconnect: health recovered', r.health.state);
+}
+
+// ---------------------------------------------------------------- the router, over a real feed
+// Every failover test in the suite runs between two fakes. This one puts a provider that cannot serve
+// anything ahead of a real one and checks that the switch happens and real data arrives after it.
+{
+  const { ConduitClient } = await import('../packages/client/dist/index.js');
+  const { CoverageError } = await import('../packages/core/dist/index.js');
+
+  const broken = {
+    id: 'polygon',
+    capabilities: new Set(['trades', 'quote_l1']),
+    synthetic: false,
+    health: () => ({
+      provider: 'polygon',
+      state: 'down',
+      connected: false,
+      consecutiveFailures: 9,
+      reconnectCount: 0,
+      messagesReceived: 0,
+      observedAtNs: 0n,
+    }),
+    supports: () => true,
+    snapshot: async () => {
+      throw new CoverageError('broken on purpose', { provider: 'polygon' });
+    },
+    summary: async () => {
+      throw new CoverageError('broken on purpose', { provider: 'polygon' });
+    },
+    stream: () => ({
+      // eslint-disable-next-line require-yield
+      async *[Symbol.asyncIterator]() {
+        throw new CoverageError('broken on purpose', { provider: 'polygon' });
+      },
+    }),
+    close: async () => {},
+  };
+
+  const real = alpaca({
+    keyId,
+    secret,
+    wsUrl: TEST_WS,
+    allowSyntheticData: true,
+    pingIntervalMs: 0,
+    socketFactory: (url) => new WebSocket(url),
+  });
+
+  const client = new ConduitClient({
+    providers: [broken, real],
+    failover: { strategy: 'ordered', healthWindowMs: 30_000 },
+  });
+
+  let switched;
+  let message;
+  try {
+    const sub = await client.subscribe({ symbols: [SYMBOL], schema: 'trades' });
+    const deadline = Date.now() + 40_000;
+    for await (const m of sub) {
+      if (m.kind === 'control') {
+        if (m.control === 'provider_switch' || m.control === 'provider_degraded') switched = m;
+        continue;
+      }
+      message = m;
+      break;
+    }
+    if (Date.now() > deadline) throw new Error('timed out');
+  } catch (error) {
+    check(false, 'router: subscribing past a broken provider', String(error));
+  }
+  await client.close();
+
+  check(
+    message !== undefined,
+    'router: real data arrived past a provider that cannot serve it',
+    message ? `${message.kind} ${message.symbol} from ${message.provider}` : 'nothing arrived',
+  );
+  check(
+    message?.provider === 'alpaca',
+    'router: the surviving provider is the working one',
+    String(message?.provider),
+  );
 }
 
 console.log(failures === 0 ? '\nlive conformance passed' : `\nlive conformance FAILED (${failures})`);

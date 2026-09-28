@@ -23,6 +23,8 @@ import { runDoctor } from '../src/doctor.js';
 import { parseDuration } from '../src/env.js';
 
 interface ProbeAdapterOptions {
+  /** A stream that rejects rather than going quiet, which is what a connection cap looks like. */
+  readonly streamError?: Error;
   readonly capabilities?: readonly Schema[];
   readonly assetClasses?: readonly AssetClass[];
   /** Thrown for an equity probe. */
@@ -106,6 +108,15 @@ class ProbeAdapter implements ProviderAdapter {
 
   stream(req: StreamRequest): AsyncIterable<CdmMessage> {
     const count = this.#options.streamMessages ?? 0;
+    const streamError = this.#options.streamError;
+    if (streamError) {
+      return {
+        // eslint-disable-next-line require-yield
+        async *[Symbol.asyncIterator]() {
+          throw streamError;
+        },
+      };
+    }
     const provider = this.id;
     const symbol = req.symbols[0] ?? 'AAPL';
     const signal = req.signal;
@@ -343,6 +354,33 @@ describe('stream probe', () => {
     expect(check.status).toBe('silent');
     expect(check.streamed).toBe(0);
     expect(check.detail).toMatch(/no quote_l1 messages in 60ms/);
+    expect(report.ok).toBe(false);
+  });
+
+  /**
+   * Found live on 2026-09-28. Alpaca refused the stream with 406 "connection limit exceeded" while its
+   * REST endpoints answered normally, and doctor reported `silent` with the detail "connected and
+   * authenticated, but no quote_l1 messages" — of which the only true part was the message count. The
+   * probe discarded the error in a bare catch, on the assumption that a stream which refuses to open
+   * is covered by the snapshot classification; it is not, because the snapshot goes over REST and REST
+   * was working. A reader would have gone looking for a dead feed instead of a used-up connection cap.
+   */
+  it('reports why a stream failed instead of calling it silent', async () => {
+    const report = await runDoctor({
+      adapters: [
+        new ProbeAdapter('alpaca', {
+          snapshotAgeMs: 50,
+          streamError: new RateLimitError('alpaca connection limit reached (406)', {
+            provider: 'alpaca',
+          }),
+        }),
+      ],
+      streamProbeMs: 60,
+    });
+    const check = report.checks[0]!;
+    expect(check.status).not.toBe('silent');
+    expect(check.detail).toMatch(/406|connection limit/);
+    expect(check.detail).not.toMatch(/authenticated/);
     expect(report.ok).toBe(false);
   });
 
