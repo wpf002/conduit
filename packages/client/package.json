@@ -1,6 +1,6 @@
 {
   "name": "@conduit/client",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "ConduitClient \u2014 failover router and subscription manager",
   "type": "module",
   "main": "./dist/index.js",

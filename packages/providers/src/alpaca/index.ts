@@ -123,6 +123,15 @@ export interface AlpacaOptions {
   /** Diagnostics. Without one the adapter is silent. */
   readonly logger?: Logger;
   readonly logLevel?: 'debug' | 'info' | 'warn' | 'error';
+  /**
+   * Reconnects allowed before an unauthenticated socket is reported as failed. The default of 4 is
+   * chosen for 406: the free plan allows one connection, so if another process holds it, four
+   * backed-off attempts are enough to cover a slot the server has not released yet, and few enough
+   * that the caller finds out in seconds rather than never.
+   */
+  readonly maxUnproductiveAttempts?: number;
+  /** How long an open socket may stay unauthenticated before it is terminated and retried. */
+  readonly productiveTimeoutMs?: number;
   /** Test seam. Production code never passes this. */
   readonly socketFactory?: ConstructorParameters<typeof ReconnectingSocket>[1];
 }
@@ -409,6 +418,7 @@ class AlpacaAdapter implements ProviderAdapter {
       {
         url: this.#options.wsUrl ?? `wss://stream.data.alpaca.markets/v2/${feed}`,
         health: this.#health,
+        maxUnproductiveAttempts: this.#options.maxUnproductiveAttempts ?? 4,
         ...(this.#options.backoff ? { backoff: this.#options.backoff } : {}),
         ...(this.#options.pingIntervalMs === undefined
           ? {}
@@ -416,15 +426,14 @@ class AlpacaAdapter implements ProviderAdapter {
         ...(this.#options.pongTimeoutMs === undefined
           ? {}
           : { pongTimeoutMs: this.#options.pongTimeoutMs }),
-        onOpen: (ctx) => {
+        productiveTimeoutMs: this.#options.productiveTimeoutMs ?? 10_000,
+        onOpen: () => {
+          // Deliberately no auth frame here. Alpaca sends {"T":"success","msg":"connected"} first
+          // and authenticates only after that; its own SDK waits for the hello before sending
+          // credentials. Sending on 'open' raced the server: observed live on 2026-09-28 the auth
+          // frame arrived too early, Alpaca never answered it, and the socket stayed open and
+          // completely silent. #onText sends it when the hello lands.
           this.#authenticated = false;
-          ctx.send(
-            JSON.stringify({
-              action: 'auth',
-              key: this.#options.keyId,
-              secret: this.#options.secret,
-            }),
-          );
         },
         onText: (data) => this.#onText(data),
         logger: this.#log,
@@ -480,9 +489,21 @@ class AlpacaAdapter implements ProviderAdapter {
       const type = msg['T'];
 
       if (type === 'success') {
+        if (msg['msg'] === 'connected') {
+          this.#log({ level: 'debug', msg: 'server hello; authenticating', provider: PROVIDER });
+          this.#socket?.send(
+            JSON.stringify({
+              action: 'auth',
+              key: this.#options.keyId,
+              secret: this.#options.secret,
+            }),
+          );
+          continue;
+        }
         if (msg['msg'] === 'authenticated') {
           this.#log({ level: 'info', msg: 'authenticated', provider: PROVIDER });
           this.#authenticated = true;
+          this.#socket?.markProductive();
           this.#resubscribeAll();
         }
         continue;
@@ -492,8 +513,16 @@ class AlpacaAdapter implements ProviderAdapter {
         const error = errorForCode(code, redact(String(msg['msg'] ?? '')));
         // undefined means benign; recording it would degrade a healthy feed.
         if (error) {
-          if (error.retryable) this.#health.recordFailure(error);
-          else this.#socket?.fail(error);
+          if (error.retryable) {
+            this.#health.recordFailure(error);
+            // A retryable error on a socket that has not authenticated is the dangerous case: 406
+            // arrives on a perfectly opened socket which Alpaca then closes, so the reconnect loop
+            // runs forever and the consumer waits on a subscription that will never deliver. Noting
+            // it lets the socket give up with this error's own class once its budget is spent.
+            if (!this.#authenticated) this.#socket?.noteError(error);
+          } else {
+            this.#socket?.fail(error);
+          }
         }
         continue;
       }

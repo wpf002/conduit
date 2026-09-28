@@ -1,6 +1,6 @@
 {
   "name": "@conduit/symbology",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "FIGI-backed instrument resolution with local cache",
   "type": "module",
   "main": "./dist/index.js",

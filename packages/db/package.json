@@ -1,6 +1,6 @@
 {
   "name": "@conduit/db",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Prisma schema and client for symbology cache + usage ledger",
   "type": "module",
   "main": "./dist/index.js",

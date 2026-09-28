@@ -13,3 +13,6 @@ coverage/
 .vscode/*
 !.vscode/extensions.json
 packages/db/src/generated/
+
+# Generated API reference (pnpm docs:api)
+docs/api/

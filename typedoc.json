@@ -1,0 +1,33 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Conduit API",
+  "entryPointStrategy": "packages",
+  "entryPoints": [
+    "packages/core",
+    "packages/providers",
+    "packages/symbology",
+    "packages/ledger",
+    "packages/client"
+  ],
+  "out": "docs/api",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "validation": {
+    "notExported": false,
+    "invalidLink": true,
+    "notDocumented": false
+  },
+  "treatWarningsAsErrors": true,
+  "highlightLanguages": [
+    "ts",
+    "tsx",
+    "js",
+    "jsx",
+    "json",
+    "bash",
+    "python",
+    "sql",
+    "text"
+  ]
+}

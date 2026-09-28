@@ -32,10 +32,15 @@ publish that in their own open-source SDKs. Reading their encoders found two bug
 documentation reading had — Databento's JSON has two shapes per numeric field, and Alpaca's stream
 is msgpack unless you ask otherwise.
 
-What remains genuinely key-gated is narrow, listed in
-[conformance.md](conformance.md#what-this-cannot-give-you), and none of it blocks M2 or M3: auth,
-reconnect against a real server, Databento's rate limits, the shape of a real entitlement error, and
-sustained behaviour over a session.
+**Closed 2026-09-28.** An Alpaca key arrived and the residual narrowed to almost nothing. Auth,
+snapshots, both reference loaders and the stream handshake have run against the real service, and
+doing so found three bugs in the socket layer that 191 passing tests could not —
+[conformance.md](conformance.md#what-running-it-found) has them.
+
+What is left is not a milestone. Streaming market data has still never been received, because
+Alpaca's free plan allows one concurrent data connection and something outside this machine holds the
+account's slot: eleven consecutive 406s after a 5½-minute quiet window. No code change is pending on
+it; it needs the slot freed or a second key.
 
 ### The original plan, for whenever a key does exist
 
@@ -70,13 +75,30 @@ The provider table currently promises more than the code does.
 | Gap | Resolution |
 |---|---|
 | ~~Tiingo is in the provider table with no adapter~~ | **Done.** bars_1d, replay-only, raw prices by default with an `adjusted` option |
-| Databento is listed as a provider but is replay-only | Either implement the live DBN/TCP gateway with CRAM auth, or state replay-only in the table itself rather than in a linked doc |
-| `depth_10` exists only as Databento replay | No live depth at all. Say so, or build it. |
+| ~~Databento is listed as a provider but is replay-only~~ | **Decided: replay-only, stated in the table.** The README's provider table has a `Live` column reading `no` for Databento, and `readme-conformance.test.ts` fails if the adapter and that cell disagree. The live gateway is not being built — reasons below. |
+| ~~`depth_10` exists only as Databento replay~~ | **Said so.** The table's `Depth` column is `no` for every live provider, and `stream()` throws `CoverageError` for `depth_10` on Polygon and Alpaca. |
 | Polygon and Alpaca adapters are equity/ETF only | Options and futures throw `CoverageError`. Either extend one adapter or narrow the claim. |
 
-The Databento live gateway is the largest single unknown in this milestone: its protocol is binary
-DBN over raw TCP with a CRAM handshake that [docs/databento-live.md](databento-live.md) records as
-not reconstructible from published docs. It needs a key and a packet capture before it needs code.
+### The Databento live gateway: not being built
+
+Recorded as a decision rather than left open, because it was the largest unknown in this milestone and
+the cost of leaving it ambiguous is that it gets reconsidered every time somebody reads the table.
+
+Its protocol is binary DBN over raw TCP with a CRAM handshake that
+[docs/databento-live.md](databento-live.md) records as not reconstructible from published docs. Three
+things make it the wrong thing to build next:
+
+1. **It needs a key and a packet capture before it needs code.** Writing it blind means writing a
+   binary decoder against a guess, and the one thing this project has learned repeatedly is that
+   guessing a wire format produces adapters that are confidently wrong.
+2. **It is a second transport.** Everything else here is JSON over websockets. A raw TCP gateway with
+   its own framing, its own auth and its own reconnect semantics roughly doubles the surface that the
+   failover router has to reason about, for one provider.
+3. **Nothing needs it.** Databento's value here is replay, which works. The live feed would duplicate
+   coverage that Polygon and Alpaca already provide.
+
+It becomes worth building when something actually needs live depth, which nothing does today. Until
+then Databento is a replay provider and the table says so.
 
 **Acceptance:** a test that asserts each adapter's `capabilities` and supported asset classes, and
 fails if the README table and the code disagree. Make the docs a test.
@@ -124,6 +146,10 @@ The build roadmap's own go/no-go gate, unchanged, and already instrumented:
 Three metrics over four weeks of live use in one real consumer: escape hatches leaking into calling
 code, failover events and whether any corrupted downstream state, and hours saved against hours
 spent.
+
+**Started 2026-09-28.** The first consumer is migrated and Conduit sits in front of its quote path.
+Week 0 is recorded in [phase-5-dogfood.md](phase-5-dogfood.md): 2 of 102 files touch Conduit, zero
+escape hatches, one degradation. Weeks 1–4 are calendar time.
 
 **Acceptance:** metric 1 trending toward its two-field baseline, zero downstream incidents, and
 migration hours below the original integration's hours.

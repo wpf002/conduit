@@ -32,15 +32,30 @@ export interface ReconnectingSocketOptions {
   readonly onBinary?: (data: Buffer, ctx: SocketContext) => void;
   /** Client-side keepalive. A missing pong terminates the socket and forces a reconnect. */
   readonly pingIntervalMs?: number;
+  /**
+   * How long an open socket may go without the caller calling markProductive() before it is
+   * terminated and retried. The keepalive cannot cover this case: a server that answers pings while
+   * never answering the auth frame keeps a socket that looks alive and delivers nothing, and the
+   * consumer waits on it indefinitely. 0 disables the check.
+   */
+  readonly productiveTimeoutMs?: number;
   readonly pongTimeoutMs?: number;
   /** Called when retrying cannot help — a revoked key, for instance. Stops the reconnect loop. */
   readonly onFatal?: (error: ConduitError) => void;
+  /**
+   * How many times the socket may open, fail to become productive, and close before the failure is
+   * reported to the caller as fatal. Without a cap a socket that completes its handshake and is then
+   * rejected at the application level reconnects forever while the consumer waits on a subscription
+   * that cannot ever deliver. Alpaca's 406 "connection limit exceeded" behaves exactly this way.
+   */
+  readonly maxUnproductiveAttempts?: number;
   readonly onReconnect?: (attempt: number, delayMs: number) => void;
   /** Already wrapped by createLogger, so it filters, redacts and cannot throw. */
   readonly logger?: Logger;
 }
 
-type SocketFactory = (url: string) => WebSocket;
+/** Test seam for ReconnectingSocket and the adapters that build one. */
+export type SocketFactory = (url: string) => WebSocket;
 
 /**
  * One socket, reconnected forever with exponential backoff and jitter, until close() or a fatal
@@ -55,7 +70,10 @@ export class ReconnectingSocket {
   #reconnectTimer: NodeJS.Timeout | undefined;
   #pingTimer: NodeJS.Timeout | undefined;
   #pongTimer: NodeJS.Timeout | undefined;
+  #productiveTimer: NodeJS.Timeout | undefined;
   #fatal: ConduitError | undefined;
+  #unproductive = 0;
+  #notedError: ConduitError | undefined;
 
   constructor(
     options: ReconnectingSocketOptions,
@@ -80,6 +98,42 @@ export class ReconnectingSocket {
 
   send(frame: string): void {
     if (this.#socket?.readyState === WebSocket.OPEN) this.#socket.send(frame);
+  }
+
+  /**
+   * The caller's signal that this connection reached a useful state — authenticated, subscribed, or
+   * delivering data. It resets the backoff and the unproductive-attempt budget, so a feed that has
+   * worked for hours and then drops gets a full retry allowance rather than one inherited from a
+   * rejection earlier in the process's life.
+   */
+  markProductive(): void {
+    this.#attempt = 0;
+    this.#unproductive = 0;
+    this.#notedError = undefined;
+    if (this.#productiveTimer) clearTimeout(this.#productiveTimer);
+    this.#productiveTimer = undefined;
+  }
+
+  /**
+   * Records an application-level error on a socket that has not become productive. If the
+   * unproductive budget runs out this is the error the caller is given, so its class survives: the
+   * router has to see a connection cap as a rate limit and a bad key as an auth failure, and a
+   * generic transport error would lose that distinction.
+   */
+  noteError(error: ConduitError): void {
+    this.#notedError = error;
+    // Do not wait for the server to decide it is done with us. Alpaca sends 406 within 50ms and
+    // then holds the connection open until its own 10s auth timeout, so leaving it to close on its
+    // own made every retry cost ten seconds of silence. Terminating now starts the backoff
+    // immediately, and the 'close' event it triggers is what schedules the retry.
+    const socket = this.#socket;
+    if (!socket || this.#closed || this.#fatal) return;
+    this.#log('warn', 'rejected before becoming productive; terminating', { code: error.code });
+    try {
+      socket.terminate();
+    } catch {
+      /* already gone */
+    }
   }
 
   /** Marks the failure fatal, stops reconnecting, and reports it to the caller. */
@@ -131,16 +185,35 @@ export class ReconnectingSocket {
   }
 
   #clearTimers(): void {
-    for (const timer of [this.#reconnectTimer, this.#pingTimer, this.#pongTimer]) {
+    for (const timer of [
+      this.#reconnectTimer,
+      this.#pingTimer,
+      this.#pongTimer,
+      this.#productiveTimer,
+    ]) {
       if (timer) clearTimeout(timer);
     }
     this.#reconnectTimer = undefined;
     this.#pingTimer = undefined;
     this.#pongTimer = undefined;
+    this.#productiveTimer = undefined;
   }
 
   #scheduleReconnect(reason: string): void {
     if (this.#closed || this.#fatal) return;
+
+    this.#unproductive += 1;
+    const cap = this.#options.maxUnproductiveAttempts;
+    if (cap !== undefined && this.#unproductive > cap) {
+      this.fail(
+        this.#notedError ??
+          new TransportError(
+            `socket opened ${this.#unproductive} times and never delivered data: ${redact(reason)}`,
+          ),
+      );
+      return;
+    }
+
     const delay = backoffDelayMs(this.#attempt, this.#options.backoff ?? DEFAULT_BACKOFF);
     this.#attempt += 1;
     // #attempt was incremented above, so it is already this reconnect's ordinal.
@@ -152,6 +225,26 @@ export class ReconnectingSocket {
       this.#connect();
     }, delay);
     this.#reconnectTimer.unref?.();
+  }
+
+  #startProductiveTimer(socket: WebSocket): void {
+    const timeout = this.#options.productiveTimeoutMs ?? 0;
+    if (timeout <= 0) return;
+    this.#productiveTimer = setTimeout(() => {
+      if (socket.readyState !== WebSocket.OPEN) return;
+      this.#log('warn', 'never became productive; terminating', { timeoutMs: timeout });
+      this.#options.health.recordFailure(
+        new TransportError(`socket never became productive within ${timeout}ms`),
+      );
+      try {
+        // terminate() rather than close(): a server that has ignored us this long will not answer a
+        // close handshake either, and the 'close' event is what schedules the retry.
+        socket.terminate();
+      } catch {
+        /* already gone */
+      }
+    }, timeout);
+    this.#productiveTimer.unref?.();
   }
 
   #startKeepalive(socket: WebSocket): void {
@@ -202,10 +295,13 @@ export class ReconnectingSocket {
     const ctx: SocketContext = { send: (frame) => this.send(frame) };
 
     socket.on('open', () => {
-      this.#attempt = 0;
+      // Deliberately not resetting #attempt here. A socket can complete its handshake and still be
+      // useless — rejected by an application-level error frame — and resetting on 'open' made every
+      // such retry the first retry, so the delay never grew and the provider got hammered.
       this.#log('info', 'socket open');
       this.#options.health.recordConnected();
       this.#startKeepalive(socket);
+      this.#startProductiveTimer(socket);
       this.#options.onOpen(ctx);
     });
 

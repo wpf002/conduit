@@ -18,7 +18,9 @@ export interface LogRecord {
 /**
  * Where Conduit's diagnostics go. A single function so any logger adapts in one line:
  *
- *   const logger = (r) => pino[r.level]({ ...r.fields, provider: r.provider }, r.msg);
+ * ```ts
+ * const logger = (r) => pino[r.level]({ ...r.fields, provider: r.provider }, r.msg);
+ * ```
  *
  * The library is silent without one. It is a library, not an application, and writing to somebody
  * else's stdout uninvited is rude — but being silent meant diagnosing a live incident required

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@conduit/core",
+      "@conduit/db",
+      "@conduit/providers",
+      "@conduit/symbology",
+      "@conduit/ledger",
+      "@conduit/client"
+    ]
+  ],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@conduit/cli",
+    "@conduit/bridge"
+  ]
+}

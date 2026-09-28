@@ -6,6 +6,7 @@ import { WebSocketServer, type WebSocket as ServerSocket } from 'ws';
 import {
   AuthError,
   CdmFlags,
+  RateLimitError,
   SchemaError,
   assertCdmInvariants,
   hasFlag,
@@ -106,7 +107,9 @@ interface FakeAlpaca {
   readonly url: string;
   readonly connections: ServerSocket[];
   readonly frames: Record<string, unknown>[];
-  authMode: 'success' | 'failed';
+  authMode: 'success' | 'failed' | 'connection-limit';
+  /** Delays the hello, so a premature auth frame is visible rather than merely lucky. */
+  helloDelayMs: number;
   send(payload: unknown): void;
   close(): Promise<void>;
 }
@@ -121,6 +124,7 @@ async function startFakeAlpaca(): Promise<FakeAlpaca> {
     connections: [],
     frames: [],
     authMode: 'success',
+    helloDelayMs: 0,
     send(payload) {
       fake.connections
         .at(-1)
@@ -134,11 +138,22 @@ async function startFakeAlpaca(): Promise<FakeAlpaca> {
 
   wss.on('connection', (socket) => {
     fake.connections.push(socket);
-    socket.send(JSON.stringify([{ T: 'success', msg: 'connected' }]));
+    const hello = () => {
+      socket.send(JSON.stringify([{ T: 'success', msg: 'connected' }]));
+      // Observed live 2026-09-28: the 406 comes immediately after the connected frame, before any
+      // auth frame is sent, and the server closes straight after. Nothing follows it, ever.
+      if (fake!.authMode === 'connection-limit') {
+        socket.send(JSON.stringify([{ T: 'error', code: 406, msg: 'connection limit exceeded' }]));
+        setTimeout(() => socket.close(), 5);
+      }
+    };
+    if (fake.helloDelayMs > 0) setTimeout(hello, fake.helloDelayMs);
+    else hello();
     socket.on('message', (raw) => {
       const frame = JSON.parse(raw.toString()) as Record<string, unknown>;
       fake.frames.push(frame);
-      if (frame['action'] === 'auth') {
+      // In connection-limit mode the server has already rejected and closed; it answers nothing.
+      if (frame['action'] === 'auth' && fake.authMode !== 'connection-limit') {
         socket.send(
           JSON.stringify([
             fake.authMode === 'success'
@@ -198,6 +213,31 @@ describe('alpaca stream', () => {
     await iterator.return?.();
   });
 
+  /**
+   * Live on 2026-09-28 the adapter sent its auth frame on socket open, before Alpaca's
+   * {"T":"success","msg":"connected"} hello. Alpaca ignored it and never replied, leaving an open,
+   * silent socket that answered pings and delivered nothing. Its own SDK waits for the hello.
+   */
+  it('waits for the server hello before sending credentials', async () => {
+    fake = await startFakeAlpaca();
+    fake.helloDelayMs = 60;
+    adapter = connect();
+    const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
+      Symbol.asyncIterator
+    ]();
+
+    // Nothing may be sent while the server has not said hello.
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(fake.frames).toEqual([]);
+
+    await waitFor(() => fake!.frames.some((f) => f['action'] === 'auth'));
+    await waitFor(() => fake!.frames.some((f) => f['action'] === 'subscribe'));
+    fake.send(payloads[3]);
+    const quote = (await iterator.next()).value as CdmMessage;
+    expect(isMarketMessage(quote) && quote.symbol).toBe('AAPL');
+    await iterator.return?.();
+  });
+
   it('fails the consumer on an auth error code', async () => {
     fake = await startFakeAlpaca();
     fake.authMode = 'failed';
@@ -209,7 +249,7 @@ describe('alpaca stream', () => {
     }).rejects.toThrow(AuthError);
   });
 
-  it('treats a connection-limit error as retryable rather than fatal', async () => {
+  it('retries a connection-limit error on a live socket without dropping it', async () => {
     fake = await startFakeAlpaca();
     adapter = connect();
     const iterator = adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })[
@@ -218,11 +258,36 @@ describe('alpaca stream', () => {
     await waitFor(() => fake!.frames.some((f) => f['action'] === 'subscribe'));
     fake.send({ T: 'error', code: 406, msg: 'connection limit exceeded' });
     await waitFor(() => adapter!.health().consecutiveFailures > 0, 2_000);
-    // Still live: a rate limit is a health signal, not a terminal state.
+    // Authenticated already, so this is a health signal and not a terminal state.
     fake.send(payloads[3]);
     const quote = (await iterator.next()).value as CdmMessage;
     expect(isMarketMessage(quote) && quote.symbol).toBe('AAPL');
     await iterator.return?.();
+  });
+
+  /**
+   * Found against a real key on 2026-09-28. `conduit stream` printed "streaming quote_l1 from
+   * alpaca" and then sat there: the free plan allows one connection, another held it, and every
+   * reconnect was rejected with 406 before authenticating. Because 406 is retryable the adapter only
+   * incremented a health counter, and because the socket's handshake succeeded the backoff reset
+   * every cycle. The consumer got no data, no error and no control message, forever.
+   */
+  it('gives up on a socket rejected with 406 before it ever authenticates', async () => {
+    fake = await startFakeAlpaca();
+    fake.authMode = 'connection-limit';
+    adapter = connect();
+    let caught: unknown;
+    try {
+      for await (const _ of adapter.stream({ symbols: ['AAPL'], schema: 'quote_l1' })) {
+        /* unreachable */
+      }
+    } catch (error) {
+      caught = error;
+    }
+    // The class has to survive: the router treats a rate limit as "try someone else", which is the
+    // correct response to a connection cap, and an AuthError would drop the key from coverage.
+    expect(caught).toBeInstanceOf(RateLimitError);
+    expect(String(caught)).toMatch(/406/);
   });
 
   it('never leaks the secret into an error', async () => {
