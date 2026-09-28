@@ -16,3 +16,20 @@ jobs:
       - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm test
+
+  # Separate job because it packs and installs outside the workspace, which is slow and which the
+  # main job's caching would otherwise mask. It is the only check that tests the packaging rather
+  # than the code: `files`, `exports`, the dist layout, and whether the published dependency graph
+  # is installable at all. Two packages were uninstallable when it was first written.
+  packaging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm smoke
+      # treatWarningsAsErrors is on, so this fails when a public signature names a type that is not
+      # exported — which a consumer cannot then name either.
+      - run: pnpm docs:api

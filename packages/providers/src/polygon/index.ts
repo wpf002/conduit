@@ -74,6 +74,10 @@ export interface PolygonOptions {
   /** Diagnostics. Without one the adapter is silent. */
   readonly logger?: Logger;
   readonly logLevel?: 'debug' | 'info' | 'warn' | 'error';
+  /** Reconnects allowed before an unauthenticated socket is reported as failed. See Alpaca's note. */
+  readonly maxUnproductiveAttempts?: number;
+  /** How long an open socket may stay unauthenticated before it is terminated and retried. */
+  readonly productiveTimeoutMs?: number;
   /** Test seam. Production code never passes this. */
   readonly socketFactory?: ConstructorParameters<typeof ReconnectingSocket>[1];
 }
@@ -320,6 +324,7 @@ class PolygonAdapter implements ProviderAdapter {
       {
         url: this.#options.wsUrl ?? 'wss://socket.polygon.io/stocks',
         health: this.#health,
+        maxUnproductiveAttempts: this.#options.maxUnproductiveAttempts ?? 4,
         ...(this.#options.backoff ? { backoff: this.#options.backoff } : {}),
         ...(this.#options.pingIntervalMs === undefined
           ? {}
@@ -327,9 +332,11 @@ class PolygonAdapter implements ProviderAdapter {
         ...(this.#options.pongTimeoutMs === undefined
           ? {}
           : { pongTimeoutMs: this.#options.pongTimeoutMs }),
-        onOpen: (ctx) => {
+        productiveTimeoutMs: this.#options.productiveTimeoutMs ?? 10_000,
+        onOpen: () => {
+          // Same handshake order as Alpaca: Polygon sends a "connected" status frame and expects
+          // auth after it, not on socket open. #onStatus sends it.
           this.#authenticated = false;
-          ctx.send(JSON.stringify({ action: 'auth', params: this.#options.apiKey }));
         },
         onText: (data) => this.#onText(data),
         logger: this.#log,
@@ -444,6 +451,7 @@ class PolygonAdapter implements ProviderAdapter {
       case 'auth_success': {
         this.#log({ level: 'info', msg: 'authenticated', provider: PROVIDER });
         this.#authenticated = true;
+        this.#socket?.markProductive();
         // Numbering may restart on a new connection; a stale baseline would invent a gap.
         this.#sequence.reset();
         this.#resubscribeAll();
@@ -468,8 +476,13 @@ class PolygonAdapter implements ProviderAdapter {
         this.#health.recordFailure(new TransportError(`polygon: ${message}`, { provider: PROVIDER }));
         return;
       }
+      case 'connected': {
+        this.#log({ level: 'debug', msg: 'server hello; authenticating', provider: PROVIDER });
+        this.#socket?.send(JSON.stringify({ action: 'auth', params: this.#options.apiKey }));
+        return;
+      }
       default:
-        // 'connected' and subscription acks need no action.
+        // Subscription acks need no action.
         return;
     }
   }

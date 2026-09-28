@@ -1,8 +1,7 @@
 # Phase 5 — dogfood in production
 
-Status: **not started.** Phases 0–4 are built and tested; this phase is four weeks of live use in
-the internal consumers, which needs provider keys and calendar time. What is built here is the
-apparatus for measuring it, so the gate is decided by numbers rather than by recollection.
+Status: **week 0 recorded, clock started 2026-09-28.** The first consumer is migrated and Conduit is
+in front of its quote path. Weeks 1–4 are calendar time, not work.
 
 This is the go/no-go gate for product-ization. If the first migration takes longer than the original
 integration did, Conduit stays an internal package permanently and the roadmap ends here.
@@ -22,18 +21,31 @@ that nothing else needed a provider-specific path. Any other use of `raw`, or an
 `message.provider`, is somewhere the unified-schema premise did not hold.
 
 ```bash
-node scripts/count-escape-hatches.mjs <consumer-repo>/src
+node scripts/count-escape-hatches.mjs <consumer-repo>/backend
 ```
 
 Exits non-zero when it finds an unsanctioned hatch. Record the count weekly:
 
-| Week | total | sanctioned | unsanctioned | notes |
-|------|-------|------------|--------------|-------|
-| 0 (pre-migration) | | | | |
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
-| 4 | | | | |
+| Week | files touching Conduit | total | sanctioned | unsanctioned | notes |
+|------|------------------------|-------|------------|--------------|-------|
+| 0 (2026-09-28) | 2 of 102 | 0 | 0 | 0 | first migration: one source class plus its wiring into the quote path |
+| 1 | | | | | |
+| 2 | | | | | |
+| 3 | | | | | |
+| 4 | | | | | |
+
+Two corrections to the counter came out of running it for the first time, and both would have
+produced a meaningless baseline:
+
+- **It scanned no Python.** The extension list was TypeScript and JavaScript only, so against a
+  Python consumer it read zero files and reported a clean zero. The first consumer does not import
+  Conduit at all — it drives the bridge over NDJSON — so `row["raw"]` and `row["provider"] == "alpaca"`
+  are the shapes a hatch takes, and those are now what it looks for. It also prints the file count,
+  because "no hatches" and "no files" printed identically before.
+- **It counted hatches in code that has nothing to do with Conduit.** Its first real run flagged an
+  unrelated `payload.get("raw")` in an intelligence route. A metric whose target is "trends to zero"
+  cannot have a floor built out of other people's dictionaries, so only files that mention Conduit
+  are counted now.
 
 An unsanctioned count that does not fall is the signal that the project is "three good clients with
 a shared shape" rather than one interface, and Phase 6 should not happen.
@@ -66,6 +78,7 @@ Record per week:
 
 | Week | switches | degradations | recoveries | dropped | thrash | downstream incidents |
 |------|----------|--------------|------------|---------|--------|----------------------|
+| 0 (2026-09-28) | 0 | 1 | 0 | 0 | 0 | 0 |
 | 1 | | | | | | |
 | 2 | | | | | | |
 | 3 | | | | | | |
@@ -83,7 +96,11 @@ itself:
 
 | Date | Hours on Conduit | Hours saved in consumer | What |
 |------|------------------|-------------------------|------|
-| | | | |
+| 2026-09-28 | 3 | 0 | First live stream attempt. Three bugs in the socket layer, all invisible to the test suite: auth sent before the server's hello, backoff resetting on every connection, and an unbounded silent retry loop. See [conformance.md](conformance.md#what-running-it-found). |
+
+The week-0 degradation is the one in the table above: Alpaca refused the stream with 406 because the
+account's single free-plan data connection is held elsewhere. Counted as a degradation rather than
+excused, because from the consumer's side that is exactly what it was.
 
 The comparison that decides the gate is **migration hours versus the original integration hours**.
 If the original Polygon integration took 20 hours and migrating it to Conduit takes 25, the

@@ -1,7 +1,9 @@
 # Conformance without a provider key
 
-Conduit has never spoken to a live market data API and may not for some time. This records how to
-get most of what live testing would give you anyway, and what it cannot give you.
+Written when Conduit had never spoken to a live market data API. It has since — an Alpaca key arrived
+and the REST paths, the reference loaders and the stream handshake have all run against the real
+service. **[What running it found](#what-running-it-found) is the part to read**; the rest records how
+much was settled before any key existed, which is most of it.
 
 ## The idea
 
@@ -66,17 +68,67 @@ message rates ever become the constraint.
 
 ## What this cannot give you
 
-Honest limits, so this is not mistaken for having run the thing:
+Honest limits. Struck through where a live Alpaca key has since settled it.
 
-- **Auth.** No key means no proof the auth handshake works, for any provider.
-- **Reconnect against a real server.** The fake servers reconnect correctly because they implement
-  what the adapter expects. A real server's close codes, timing and quirks are untested.
-- **Rate limits.** Whether the governor's ceilings match reality is unverified for Databento.
-- **Entitlement errors.** `conduit doctor` distinguishes revoked from unentitled keys in tests
-  against a fake adapter. Whether a real 403 body looks the way the adapter assumes is unknown.
+- ~~**Auth.** No key means no proof the auth handshake works, for any provider.~~ **Settled for
+  Alpaca.** REST auth works; `summary()` and both reference loaders return real data. The stream's
+  auth handshake is written correctly but has not completed — see below.
+- ~~**Reconnect against a real server.**~~ **Settled for Alpaca.** A real rejection loop was
+  exercised for over two minutes: real close codes (1006, no close frame), real error frames, and
+  backoff growing 264ms → 35s across eleven attempts.
+- **Rate limits.** Still unverified for Databento.
+- **Entitlement errors.** Alpaca's error codes have been seen for real only at 406. Whether a 403
+  body looks the way the adapter assumes is still unknown.
 - **Sustained behaviour.** Memory over a session, socket stability over hours, behaviour across a
-  market open and close.
-- **Data correctness.** Every fixture in this repo is synthetic or vendor-authored. Nothing proves
-  that a price Conduit emits equals the price that printed.
+  market open and close. Untested.
+- **Data correctness.** Every committed fixture is still synthetic or vendor-authored. The live
+  snapshot numbers were plausible and matched across symbols, which is not the same as verified
+  against the tape.
 
-The first four are each a single afternoon once any key exists, including a free one.
+## What running it found
+
+Three bugs on 2026-09-28, during market hours, on the first attempt to stream. Every one of them was
+invisible to 191 passing tests, because the fake server implemented what the adapter expected.
+
+### The adapter authenticated before the server said hello
+
+`onOpen` sent the auth frame the instant the socket opened. Alpaca sends
+`{"T":"success","msg":"connected"}` first and authenticates only after that, and its own SDK waits for
+that hello. The premature frame was ignored, Alpaca never answered, and the socket sat open and
+silent until its 10-second auth timeout. Auth now goes out from the hello handler. Polygon had the
+same ordering and was fixed with it, though it is unverified against a real Polygon server.
+
+### Backoff reset on every connection, so a rejected socket retried at full speed
+
+`#attempt = 0` lived in the socket's `'open'` handler. A socket rejected at the *application* level
+completes its handshake perfectly, so every retry looked like the first retry: the delay never grew
+and the provider got hammered at the base interval indefinitely. The counter now resets only when the
+caller reports the connection productive — authenticated, subscribed, delivering.
+
+### A socket that was never going to work retried forever in silence
+
+Alpaca's 406 is `RateLimitError`, which is retryable, so the handler incremented a health counter and
+left the socket alone. Nothing bounded it. `conduit stream AAPL` printed
+`streaming quote_l1 for AAPL from alpaca` and then produced no data, no error and no control message,
+for as long as it was left running. Three changes:
+
+| Change | Effect |
+|---|---|
+| `maxUnproductiveAttempts` (default 4) | the consumer is told, with the noted error's own class, so the router sees a connection cap as a rate limit rather than a dead key |
+| `productiveTimeoutMs` (default 10s) | an open socket that never authenticates is terminated and retried; the keepalive could not catch this, because pings were answered |
+| terminate on a pre-auth rejection | Alpaca holds the socket open until its own 10s auth timeout after sending 406, so each retry cost ten seconds of silence |
+
+Measured on the same key afterwards: **4.4 seconds to a `RateLimitError` reading
+`alpaca connection limit reached (406): connection limit exceeded`**, in place of indefinite silence.
+
+### What is still not verified
+
+Streaming market data has never been received. Alpaca's free plan allows one concurrent data
+connection and something outside this machine holds the account's slot: after a 5½-minute quiet
+window with nothing of ours connected, all eleven attempts were refused with 406 within ~44ms. The
+account is `ACTIVE` and REST works, so this is a connection cap and not entitlement. What remains
+unverified is therefore everything downstream of a successful stream auth: subscription
+acknowledgement, message normalization against real ticks, sequence numbering, and behaviour across a
+session boundary.
+
+Freeing the slot — or a second key — is all that is needed; no code change is pending on it.

@@ -1,6 +1,6 @@
 {
   "name": "@conduit/providers",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Provider adapters: Polygon, Alpaca, Databento, Tiingo",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,6 +23,8 @@
   },
   "dependencies": {
     "@conduit/core": "workspace:^",
+    "@types/node": "^22.20.4",
+    "@types/ws": "^8.18.1",
     "undici": "^8.11.2",
     "ws": "^8.21.3",
     "zod": "^4.6.5"

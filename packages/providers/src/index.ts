@@ -2,10 +2,15 @@ export * from './polygon/index.js';
 export * from './alpaca/index.js';
 export * from './databento/index.js';
 export * from './tiingo/index.js';
-export { AsyncQueue, type AsyncQueueOptions } from './queue.js';
-export { ReconnectingSocket, type ReconnectingSocketOptions, type SocketContext } from './ws.js';
+export { AsyncQueue, type AsyncQueueOptions, type OverflowInfo } from './queue.js';
+export {
+  ReconnectingSocket,
+  type ReconnectingSocketOptions,
+  type SocketContext,
+  type SocketFactory,
+} from './ws.js';
 export { SubscriptionRegistry } from './subscriptions.js';
-export { ConsumerSet, schemaOf } from './fanout.js';
+export { ConsumerSet, schemaOf, type Consumer } from './fanout.js';
 export {
   SequenceTracker,
   type SequenceGap,

@@ -1,6 +1,6 @@
 {
   "name": "@conduit/bridge",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Conduit as a subprocess, over newline-delimited JSON, for non-TypeScript consumers",
   "type": "module",
