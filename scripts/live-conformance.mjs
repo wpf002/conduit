@@ -78,6 +78,9 @@ async function collect(schema, windowMs, onAdapter) {
     keyId,
     secret,
     wsUrl: TEST_WS,
+    // This script is the reason allowSyntheticData exists. Everything else — the CLI, the bridge, any
+    // consumer — is refused this endpoint, because FAKEPACA's prices are invented.
+    allowSyntheticData: true,
     pingIntervalMs: 0,
     socketFactory: (url) => {
       const socket = new WebSocket(url);
