@@ -262,19 +262,27 @@ brings its own patched tree.
 
 ## Branch protection
 
-`main` requires the `ci` check and blocks force pushes. To reapply it, send a JSON body — the
-shorthand form sends `strict` as a string and the API rejects it:
+`main` requires the `ci` check, applies to administrators, and blocks force pushes. To reapply it,
+send a JSON body — the shorthand form sends `strict` as a string and the API rejects it:
 
 ```bash
 gh api -X PUT repos/wpf002/conduit/branches/main/protection --input - << 'JSON'
 {
   "required_status_checks": { "strict": true, "contexts": ["ci"] },
-  "enforce_admins": false,
+  "enforce_admins": true,
   "required_pull_request_reviews": null,
   "restrictions": null
 }
 JSON
 ```
+
+`enforce_admins` is `true` and this snippet has to keep saying so. A `PUT` to this endpoint replaces
+the whole rule, so an earlier version of these lines that read `false` would have quietly switched
+admin enforcement off for whoever pasted it.
+
+The `packaging` job is **not** in `contexts`, so it can fail without blocking a merge. Adding it is a
+one-line change to the list above, and worth doing once it has run on a few pull requests without
+flaking — a required check that has never been observed is a merge queue waiting to jam.
 
 ## Toolchain
 
