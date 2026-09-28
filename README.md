@@ -335,9 +335,25 @@ pnpm test
 ```
 
 `pnpm db:push` reads `DATABASE_URL` through `packages/db/prisma.config.ts`, because Prisma 7 no longer
-takes it from `datasource db { url = env(...) }` for CLI commands. If it reports **permission denied
-for schema public**, `DATABASE_URL` is connecting as a role that does not own the database: Postgres 15
-and later revoke `CREATE` on `public` from non-owners. Connect as the owner, or grant it.
+takes it from `datasource db { url = env(...) }` for CLI commands.
+
+If it reports **permission denied for schema public**, the role in `DATABASE_URL` does not own the
+database. Postgres 15 and later make `public` owned by `pg_database_owner` and revoke `CREATE` from
+everyone else, so `createdb` run by one role and a `DATABASE_URL` naming another is enough to cause it.
+Granting is not sufficient on its own — `db:push` alters and drops tables, which needs ownership rather
+than privileges:
+
+```bash
+psql -d conduit -c 'ALTER DATABASE conduit OWNER TO <role>'
+psql -d conduit -c 'ALTER SCHEMA public OWNER TO <role>'
+```
+
+Existing tables keep their old owner, so reassign those too:
+
+```bash
+psql -d conduit -Atc "select format('ALTER TABLE public.%I OWNER TO <role>', tablename) \
+  from pg_tables where schemaname='public'" | psql -d conduit
+```
 
 ## Failover
 
