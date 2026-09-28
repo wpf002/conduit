@@ -212,6 +212,15 @@ staying an internal package. See [docs/phase-5-dogfood.md](docs/phase-5-dogfood.
 ## Checking that it works
 
 ```bash
+pnpm verify          # all of the below, with a verdict
+pnpm verify --fast   # skips the checks that talk to a vendor
+```
+
+`pnpm verify` is the answer to "does it work". It runs every check this machine can run and prints one
+verdict, and a check it cannot run is reported as **skipped with the reason** rather than passing
+quietly — an unrunnable check counted as green is worse than a failing one.
+
+```bash
 pnpm test      # 398 unit tests against fakes
 pnpm truth     # are the prices right, against an independent vendor
 pnpm live      # streaming protocol, against a real Alpaca server

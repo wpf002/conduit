@@ -20,7 +20,8 @@
     "docs:api": "typedoc",
     "smoke": "node scripts/install-smoke-test.mjs",
     "live": "node scripts/live-conformance.mjs",
-    "truth": "node scripts/price-truth.mjs"
+    "truth": "node scripts/price-truth.mjs",
+    "verify": "node scripts/verify-all.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",
