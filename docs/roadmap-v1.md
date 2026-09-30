@@ -147,9 +147,18 @@ Three metrics over four weeks of live use in one real consumer: escape hatches l
 code, failover events and whether any corrupted downstream state, and hours saved against hours
 spent.
 
-**Started 2026-09-28.** The first consumer is migrated and Conduit sits in front of its quote path.
-Week 0 is recorded in [phase-5-dogfood.md](phase-5-dogfood.md): 2 of 102 files touch Conduit, zero
-escape hatches, one degradation. Weeks 1–4 are calendar time.
+**Running since 2026-09-30, reviewed 2026-10-26.** The consumer is migrated, both repositories are
+merged to `main`, and `CONDUIT_BRIDGE` is set in the consumer's environment, so its quote endpoint
+serves every request through Conduit. Verified over HTTP with only the consumer's own `.env` loaded:
+the bridge reports `providers=['alpaca']` and nothing falls through to the direct vendor path.
+
+Week 0 is in [phase-5-dogfood.md](phase-5-dogfood.md): 2 of 102 files touch Conduit, zero escape
+hatches, one degradation. Weeks 1–4 are calendar time.
+
+**Every package is still `0.1.0` and that is deliberate.** v1 is what this milestone decides, and
+three of the decision rule's four outcomes end with Conduit staying an internal package at `0.x`. A
+1.0.0 cut before the window closes would be asserting the gate had cleared when the evidence base was
+two days long.
 
 **Acceptance:** metric 1 trending toward its two-field baseline, zero downstream incidents, and
 migration hours below the original integration's hours.

@@ -123,6 +123,12 @@ const skipped = results.filter((r) => r.state === 'skipped');
 const passed = results.filter((r) => r.state === 'passed');
 
 console.log(`\n${passed.length} passed, ${failed.length} failed, ${skipped.length} skipped`);
+// Name them in the summary. A long run's failure detail scrolls off, and a tail showing only the
+// count leaves you re-running the whole thing to find out which one it was.
+if (failed.length > 0) {
+  console.log('failed:');
+  for (const f of failed) console.log(`  ${f.name}`);
+}
 if (skipped.length > 0) {
   console.log('skipped is not passed:');
   for (const s of skipped) console.log(`  ${s.name} — ${s.detail}`);
