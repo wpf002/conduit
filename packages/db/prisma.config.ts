@@ -11,15 +11,21 @@ import { defineConfig } from 'prisma/config';
  * directory, so the path is explicit; `dotenv/config` alone looks in the wrong place and the failure
  * it produces ("Connection url is empty") does not say why.
  *
+ * A missing DATABASE_URL is deliberately NOT fatal here. `prisma generate` runs as part of
+ * `pnpm build` and needs no database at all, so throwing broke every build in CI, where no database
+ * exists — which is exactly what happened. The commands that do need a URL (`db push`, `migrate`,
+ * `studio`) still fail, with Prisma's own message and the note below next to it.
+ *
  * The runtime path never had this problem: `createPrismaClient(connectionString)` hands the URL to the
- * driver adapter explicitly. Only the CLI was broken.
+ * driver adapter explicitly.
  */
 loadEnv({ path: new URL('../../.env', import.meta.url).pathname, quiet: true });
 
-const url = process.env['DATABASE_URL'];
+const url = process.env['DATABASE_URL'] ?? '';
 if (!url) {
-  throw new Error(
-    'DATABASE_URL is not set. Copy .env.example to .env at the repository root and fill it in.',
+  process.stderr.write(
+    'note: DATABASE_URL is not set. `prisma generate` does not need it; `db push`, `migrate` and ' +
+      '`studio` do. Copy .env.example to .env at the repository root.\n',
   );
 }
 
