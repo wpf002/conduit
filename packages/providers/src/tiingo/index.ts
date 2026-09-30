@@ -53,6 +53,9 @@ export interface TiingoOptions {
  * symbol, not per call.
  */
 class TiingoAdapter implements ProviderAdapter {
+  /** No sandbox endpoint exists for this vendor, so nothing here can be synthetic. */
+  readonly synthetic = false;
+
   readonly id = PROVIDER;
   readonly capabilities = CAPABILITIES;
 

@@ -25,7 +25,17 @@ export interface Request {
 
 export type Response =
   /** Sent once at startup, after the providers are constructed. */
-  | { readonly type: 'ready'; readonly providers: readonly string[]; readonly coverage: Record<string, readonly string[]> }
+  | {
+      readonly type: 'ready';
+      readonly providers: readonly string[];
+      readonly coverage: Record<string, readonly string[]>;
+      /**
+       * Providers serving a vendor sandbox's invented prices rather than the market. Normally empty;
+       * the bridge refuses to start when it is not, unless CONDUIT_ALLOW_SYNTHETIC=1. A consumer that
+       * opted in can read this and label or reject the data.
+       */
+      readonly synthetic: readonly string[];
+    }
   /** A completed one-shot request. */
   | { readonly type: 'result'; readonly id: number; readonly data: unknown }
   /** One message on a subscription. */

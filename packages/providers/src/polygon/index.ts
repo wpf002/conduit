@@ -83,6 +83,9 @@ export interface PolygonOptions {
 }
 
 class PolygonAdapter implements ProviderAdapter {
+  /** No sandbox endpoint exists for this vendor, so nothing here can be synthetic. */
+  readonly synthetic = false;
+
   readonly id = PROVIDER;
   readonly capabilities = CAPABILITIES;
 

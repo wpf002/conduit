@@ -40,6 +40,8 @@ export interface FakeAdapterOptions {
 export class FakeAdapter implements ProviderAdapter {
   readonly id: ProviderId;
   readonly capabilities: ReadonlySet<Schema>;
+  /** A double, not a vendor sandbox: the data is the test's own, and the test knows that. */
+  readonly synthetic = false;
 
   #assetClasses: ReadonlySet<AssetClass>;
   #health: HealthTracker;

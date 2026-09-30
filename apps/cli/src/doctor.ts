@@ -151,9 +151,15 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorReport> {
     if (status === 'ok' && options.streamProbeMs && options.streamProbeMs > 0) {
       const schema = pickStreamSchema(adapter);
       if (schema) {
-        streamed = await countStreamed(adapter, schema, probeSymbols, options.streamProbeMs);
+        const probe = await countStreamed(adapter, schema, probeSymbols, options.streamProbeMs);
+        streamed = probe.count;
         const marketLooksOpen = snapshotAgeMs !== undefined && snapshotAgeMs < options.streamProbeMs * 10;
-        if (streamed === 0 && marketLooksOpen) {
+        if (probe.error !== undefined) {
+          // The stream said why it failed, which beats any inference doctor could make from silence.
+          const classified = classify(probe.error);
+          status = classified.status;
+          detail = `stream refused: ${classified.detail}`;
+        } else if (streamed === 0 && marketLooksOpen) {
           status = 'silent';
           detail = `connected and authenticated, but no ${schema} messages in ${options.streamProbeMs}ms while REST data was ${snapshotAgeMs}ms old`;
         } else if (streamed === 0) {
@@ -228,28 +234,39 @@ function pickStreamSchema(adapter: ProviderAdapter): Schema | undefined {
 }
 
 /** Opens a stream for a fixed window and counts what arrives. Never throws. */
+/**
+ * Counts messages, and reports the reason if the stream refused instead.
+ *
+ * The error used to be discarded here, on the reasoning that a stream which cannot open is already
+ * covered by the snapshot probe. It is not: the snapshot goes over REST, and a stream can fail while
+ * REST works perfectly — Alpaca refusing a sixth connection with 406 is exactly that. Swallowing it
+ * left the caller with a count of zero, which it reported as a silent socket that had "connected and
+ * authenticated", when the socket had done neither.
+ */
 async function countStreamed(
   adapter: ProviderAdapter,
   schema: Schema,
   symbols: readonly string[],
   durationMs: number,
-): Promise<number> {
+): Promise<{ count: number; error?: unknown }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), durationMs);
   let count = 0;
+  let error: unknown;
   try {
     for await (const message of adapter.stream({ symbols, schema, signal: controller.signal })) {
       if (message.kind !== 'control') count += 1;
       // A single message answers the question; no need to hold the socket for the full window.
       if (count >= 1) break;
     }
-  } catch {
-    // A stream that refuses to open is already covered by the snapshot probe's classification.
+  } catch (caught) {
+    // An abort is this function's own timer firing, not a fault.
+    if (!controller.signal.aborted || count > 0) error = caught;
   } finally {
     clearTimeout(timer);
     controller.abort();
   }
-  return count;
+  return error === undefined ? { count } : { count, error };
 }
 
 function classify(error: unknown): { status: DoctorStatus; detail: string } {

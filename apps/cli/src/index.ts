@@ -11,6 +11,7 @@ import {
   type Schema,
 } from '@conduit/core';
 import { ConduitClient } from '@conduit/client';
+import { describe } from './describe.js';
 import { MemoryLedgerStore, PrismaLedgerStore, UsageLedger, type LedgerStore } from '@conduit/ledger';
 import {
   MemorySymbologyStore,
@@ -40,18 +41,6 @@ function fail(message: string, hint?: string): never {
   process.exit(1);
 }
 
-function describe(error: unknown): string {
-  if (error instanceof Error) {
-    // Prisma's initialization errors carry a multi-kilobyte message that starts with blank lines,
-    // so take the first line that actually says something.
-    const line = error.message
-      .split('\n')
-      .map((l) => l.trim())
-      .find((l) => l.length > 0);
-    return redact(line ?? error.name);
-  }
-  return String(error);
-}
 
 /** Postgres is optional everywhere; a command that needs durable data says so rather than failing. */
 async function openLedgerStore(databaseUrl: string | undefined): Promise<{
