@@ -1,7 +1,16 @@
 # Phase 5 — dogfood in production
 
-Status: **week 0 recorded, clock started 2026-09-28.** The first consumer is migrated and Conduit is
-in front of its quote path. Weeks 1–4 are calendar time, not work.
+Status: **running. Clock starts 2026-09-30; review 2026-10-26.**
+
+The start date moved, and the reason matters. Week 0's numbers were taken on 2026-09-28, but on that
+date the integration sat on an unmerged branch and `CONDUIT_BRIDGE` was set by hand for each test — so
+nothing routed through Conduit in normal operation and no dogfooding was happening. On 2026-09-30 both
+repositories merged to `main` and `CONDUIT_BRIDGE` went into the consumer's `.env`, which is the first
+moment real traffic could reach it. Four weeks of live use means four weeks of it actually being
+live.
+
+A scheduled review fires on 2026-10-26 and runs the three metrics below. Weeks 1–4 are calendar time,
+not work.
 
 This is the go/no-go gate for product-ization. If the first migration takes longer than the original
 integration did, Conduit stays an internal package permanently and the roadmap ends here.
